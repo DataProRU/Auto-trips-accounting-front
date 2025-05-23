@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "./button";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 import { Calendar } from "./calendar";
+import { ru } from "date-fns/locale";
 import {
   Select,
   SelectContent,
@@ -100,9 +101,9 @@ export function DatePicker({
           )}
         >
           {date ? (
-            format(date, "PPP")
+            format(date, "PPP", { locale: ru })
           ) : (
-            <span className="text-gray-400">Выберите дату</span>
+            <span className="text-gray-400">Дата назначения</span>
           )}
           <CalendarIcon className="ml-auto h-4 w-4 text-gray-900" />
         </Button>
@@ -119,9 +120,9 @@ export function DatePicker({
               )}
             >
               {date ? (
-                format(date, "PPP")
+                format(date, "PPP", { locale: ru })
               ) : (
-                <span className="text-gray-400">Выберите дату</span>
+                <span className="text-gray-400">Дата назначения</span>
               )}
               <CalendarIcon className="ml-auto h-4 w-4 text-gray-900" />
             </Button>

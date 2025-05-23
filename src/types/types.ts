@@ -1,7 +1,6 @@
 export interface Wallet {
   name: string;
   username: string;
-  balance: number;
 }
 
 export interface FormData {
@@ -30,10 +29,10 @@ export interface ReportState {
   loading: boolean;
   success: boolean;
   error: string | null;
-  currencies: Currency[];
+  currencies: ICurrency[];
 }
 
-export interface Currency {
+export interface ICurrency {
   id: number;
   code: string;
   name: string;
