@@ -33,6 +33,9 @@ const ReportForm: React.FC = () => {
     currencies,
   } = useAppSelector((state) => state.report);
 
+  const params = new URLSearchParams(location.search);
+  const username = params.get("username");
+
   const createOptions = <T,>(
     items: T[],
     key: keyof T,
@@ -74,13 +77,15 @@ const ReportForm: React.FC = () => {
     }
   }, [success, dispatch]);
 
-   useEffect(() => {
+  useEffect(() => {
     if (error) {
-      const timer = setTimeout(() => dispatch(setFormDataField({ name: "error", value: "" })), 3000);
+      const timer = setTimeout(
+        () => dispatch(setFormDataField({ name: "error", value: "" })),
+        3000
+      );
       return () => clearTimeout(timer);
     }
   }, [error, dispatch]);
-
 
   const handleChange = (name: string, value: string) => {
     dispatch(setFormDataField({ name, value }));
@@ -100,7 +105,7 @@ const ReportForm: React.FC = () => {
       );
       return;
     }
-    dispatch(submitForm({ ...formData, operations }));
+    dispatch(submitForm({ ...formData, operations, username: username ?? "" }));
   };
 
   const operationOptions = createOptions(operations, "id", (op) => op.name);
