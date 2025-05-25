@@ -7,16 +7,16 @@ function RedirectToBot() {
   const username = params.get("username");
 
   if (username) {
-    return <Navigate to={`/tg_add_bot?username=${username}`} replace />;
+    return <Navigate to={`/tg_bot_add?username=${username}`} replace />;
   } else {
-    return <Navigate to="/tg_add_bot" replace />;
+    return <Navigate to="/tg_bot_add" replace />;
   }
 }
 
 function App() {
   return (
     <Routes>
-      <Route path="/tg_add_bot" element={<ReportFormPage />} />
+      <Route path="/tg_bot_add" element={<ReportFormPage />} />
       <Route path="*" element={<RedirectToBot />} />
     </Routes>
   );
