@@ -12,9 +12,7 @@ export const fetchInitialData = createAsyncThunk<
   { rejectValue: string }
 >("report/fetchInitialData", async (_, { rejectWithValue }) => {
   try {
-    const response = await $api.get<IInitialDataResponse>(
-      "/tg_bot_add?username=admin"
-    );
+    const response = await $api.get<IInitialDataResponse>("get_form_data");
     const { data } = response;
     return {
       ...data,
