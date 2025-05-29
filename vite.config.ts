@@ -5,7 +5,7 @@ import tailwindcss from "@tailwindcss/vite"
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/tg_bot_add/',
+  base: '/tg_bot_add?username=',
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {

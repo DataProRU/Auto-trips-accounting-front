@@ -1,24 +1,53 @@
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAppSelector, useAppDispatch } from "./hooks/hooks";
+import { logout } from "./store/slices/authSlice";
 import ReportFormPage from "./pages/ReportFormPage";
-
-function RedirectToBot() {
-  const location = useLocation();
-  const params = new URLSearchParams(location.search);
-  const username = params.get("username");
-
-  if (username) {
-    return <Navigate to={`/tg_bot_add?username=${username}`} replace />;
-  } else {
-    return <Navigate to="/tg_bot_add" replace />;
-  }
-}
+import LoginPage from "./pages/LoginPage";
+import $api from "./setup/http/http";
+import type { AxiosError } from "axios";
 
 function App() {
+  const { isAuthenticated, username } = useAppSelector((state) => state.auth);
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
+  const params = new URLSearchParams(location.search);
+  const url_name = params.get("username");
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem("access_token");
+
+    const checkAuth = async () => {
+      if (!accessToken) return;
+
+      try {
+        await $api.get(`/check_token?token=${accessToken}`);
+      } catch (error: unknown) {
+        const err = error as AxiosError;
+        if (err.response?.status === 401) {
+          localStorage.removeItem("access_token");
+          dispatch(logout());
+          navigate("/", { replace: true });
+        }
+      }
+    };
+
+    checkAuth();
+
+    const intervalId = setInterval(checkAuth, 3 * 60 * 1000);
+
+    return () => clearInterval(intervalId);
+  }, [navigate, dispatch]);
+
   return (
-    <Routes>
-      <Route path="/tg_bot_add" element={<ReportFormPage />} />
-      <Route path="*" element={<RedirectToBot />} />
-    </Routes>
+    <>
+      {isAuthenticated && username === url_name ? (
+        <ReportFormPage />
+      ) : (
+        <LoginPage />
+      )}
+    </>
   );
 }
 
