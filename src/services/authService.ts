@@ -1,5 +1,5 @@
 import { $api } from "@/setup/http/http";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
 interface LoginResponse {
   access_token: string;
@@ -35,4 +35,15 @@ export const authService = {
       throw new Error("Ошибка сети. Попробуйте снова.");
     }
   },
+};
+
+export const checkToken = async (token: string) => {
+  try {
+    return await $api.get(`/check_token?token=${token}`);
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      throw error;
+    }
+    throw new Error("Unknown error occurred during token check");
+  }
 };
