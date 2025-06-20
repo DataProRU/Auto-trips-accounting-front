@@ -4,8 +4,8 @@ import { useAppSelector, useAppDispatch } from "./hooks/hooks";
 import { logout } from "./store/slices/authSlice";
 import ReportFormPage from "./pages/ReportFormPage";
 import LoginPage from "./pages/LoginPage";
-import $api from "./setup/http/http";
-import type { AxiosError } from "axios";
+import { checkToken } from "./services/authService";
+import { AxiosError } from "axios";
 
 function App() {
   const { isAuthenticated, username } = useAppSelector((state) => state.auth);
@@ -19,22 +19,26 @@ function App() {
     const accessToken = localStorage.getItem("access_token");
 
     const checkAuth = async () => {
-      if (!accessToken) return;
+      if (!accessToken) {
+        dispatch(logout());
+        navigate("/", { replace: true });
+        return;
+      }
 
       try {
-        await $api.get(`/check_token?token=${accessToken}`);
+        await checkToken(accessToken);
       } catch (error: unknown) {
-        const err = error as AxiosError;
-        if (err.response?.status === 401) {
+        if (error instanceof AxiosError && error.response?.status === 401) {
           localStorage.removeItem("access_token");
           dispatch(logout());
           navigate("/", { replace: true });
+        } else {
+          console.error("Token check failed:", error);
         }
       }
     };
 
     checkAuth();
-
     const intervalId = setInterval(checkAuth, 3 * 60 * 1000);
 
     return () => clearInterval(intervalId);
