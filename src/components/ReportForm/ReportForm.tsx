@@ -192,7 +192,7 @@ const ReportForm: React.FC = () => {
         value={formData.comment}
         onChange={(e) => handleChange("comment", e.target.value)}
         placeholder="Назначение платежа"
-        className="my-1"
+        className="my-1 min-h-[70px]  "
       />
       {selectedOperation?.name !== "Перемещение" && (
         <SelectField

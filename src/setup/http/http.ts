@@ -1,7 +1,8 @@
 import axios from "axios";
 
 export const API_URL = import.meta.env.VITE_API_URL;
-// export const API_URL = "http://localhost:8001";
+// export const API_URL = "http://localhost:8000";
+
 
 export const $api = axios.create({
   withCredentials: true,
@@ -17,7 +18,7 @@ $api.interceptors.response.use(
       localStorage.getItem("access_token")
     ) {
       localStorage.removeItem("access_token");
-      window.location.href = "/"; 
+      window.location.href = "/";
     }
     return Promise.reject(error);
   }
