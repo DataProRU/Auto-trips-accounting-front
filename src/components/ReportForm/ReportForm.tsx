@@ -1,68 +1,130 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
+import type { Invoice } from "@/types/api";
+import type { FormData } from "@/types/forms";
+import type { RootState } from "@/store/store";
+
 import { Button } from "@/ui/button";
 import { Input } from "@/ui/input";
 import { Textarea } from "@/ui/textarea";
 import { DatePicker } from "@/ui/date-picker";
 import ErrorMessage from "@/ui/error-message";
 import SelectField from "@/ui/select-field";
+import SuccessMessage from "@/ui/success-message";
+import Loader from "@/ui/loader";
+import TransferForm from "../TransferForm/TransferForm";
+import NoneTransferForm from "../NoneTransferForm/NoneTransferForm";
+import CounterpartyModal from "../Modals/CounterpartyModal";
+import { getValidationSchema } from "@/lib/validationSchemas";
+
+import { fetchInitialData, submitForm } from "@/services/reportService";
+import { fetchInvoices } from "@/store/slices/invoiceSlice";
+
 import {
   setFormDataField,
   resetAccountingFields,
   resetAccountType,
   setSuccess,
+  clearError,
+  createSubmitPayload,
+  validateSubmitPayload,
 } from "@/store/slices/reportSlice";
-import { fetchInitialData, submitForm } from "@/services/reportService";
-import TransferForm from "../TransferForm/TransferForm";
-import NoneTransferForm from "../NoneTransferForm/NoneTransferForm";
-import SuccessMessage from "@/ui/success-message";
-import Loader from "@/ui/loader";
+import {
+  selectFormData,
+  selectOperationTypes,
+  selectWallets,
+  selectCategoryArticles,
+  selectOperationCategories,
+  selectCurrencies,
+  selectCompanies,
+  selectCounterparties,
+  selectLoading,
+  selectSuccess,
+  selectError,
+  selectSelectedOperation,
+  selectIsFormValid,
+  selectShowCounterpartyField,
+  selectShowTransferForm,
+  selectShowSuccessMessage,
+  selectOperationOptions,
+  selectPaymentOptions,
+  selectReportWalletOptions,
+  selectCurrencyOptions,
+  selectCompanyOptions,
+  selectCounterpartyOptions,
+} from "@/store/selectors/reportSelectors";
 
 const ReportForm: React.FC = () => {
   const dispatch = useAppDispatch();
-  const {
-    formData,
-    operations,
-    wallets,
-    categoryArticles,
-    operationCategories,
-    paymentTypes,
-    loading,
-    success,
-    error,
-    currencies,
-  } = useAppSelector((state) => state.report);
 
-  const params = new URLSearchParams(location.search);
-  const username = params.get("username");
+  // Используем селекторы вместо прямого обращения к состоянию
+  const formData = useAppSelector(selectFormData);
+  const operation_types = useAppSelector(selectOperationTypes);
+  const wallets = useAppSelector(selectWallets);
+  const categoryArticles = useAppSelector(selectCategoryArticles);
+  const operationCategories = useAppSelector(selectOperationCategories);
 
-  const createOptions = <T,>(
-    items: T[],
-    key: keyof T,
-    labelFn?: (item: T) => string
-  ) =>
-    items.map((item, index) => ({
-      value: String(item[key]),
-      label: labelFn ? labelFn(item) : String(item[key]),
-      key: `${String(item[key])}-${index}`,
-    }));
+  const currencies = useAppSelector(selectCurrencies);
+  const companies = useAppSelector(selectCompanies);
+  const counterparties = useAppSelector(selectCounterparties);
+  const loading = useAppSelector(selectLoading);
+  const success = useAppSelector(selectSuccess);
+  const error = useAppSelector(selectError);
+
+  // Вычисляемые селекторы
+  const selectedOperation = useAppSelector(selectSelectedOperation);
+  const isFormValid = useAppSelector(selectIsFormValid);
+  const showCounterpartyField = useAppSelector(selectShowCounterpartyField);
+  const showTransferForm = useAppSelector(selectShowTransferForm);
+  const showSuccessMessage = useAppSelector(selectShowSuccessMessage);
+
+  // Селекторы для опций
+  const operationOptions = useAppSelector(selectOperationOptions);
+  const paymentOptions = useAppSelector(selectPaymentOptions);
+  const walletOptions = useAppSelector(selectReportWalletOptions);
+  const currencyOptions = useAppSelector(selectCurrencyOptions);
+  const companyOptions = useAppSelector(selectCompanyOptions);
+  const counterpartyOptions = useAppSelector(selectCounterpartyOptions);
+
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [createdInvoice, setCreatedInvoice] = useState<Invoice | null>(null);
+
+  const reduxState = useAppSelector((state) => state as RootState);
+
+  const refreshInvoices = useCallback(async () => {
+    try {
+      await dispatch(fetchInvoices()).unwrap();
+    } catch (err) {
+      console.error("Ошибка обновления счетов:", err);
+    }
+  }, [dispatch]);
 
   useEffect(() => {
     dispatch(fetchInitialData());
   }, [dispatch]);
 
   useEffect(() => {
-    const operation = operations.find(
+    const operation = operation_types.find(
       (op) => op.id === Number(formData.operation)
     );
-    if (operation && operationCategories[operation.name]) {
+    if (operation && operationCategories[String(operation.id)]) {
       dispatch(resetAccountingFields());
       if (operation.name !== "Перемещение") {
         dispatch(setFormDataField({ name: "wallet_from", value: "" }));
         dispatch(setFormDataField({ name: "wallet_to", value: "" }));
       }
     }
-  }, [formData.operation, operationCategories, operations, dispatch]);
+  }, [
+    formData.operation,
+    operationCategories,
+    operation_types,
+    dispatch,
+    counterparties,
+    wallets,
+  ]);
 
   useEffect(() => {
     if (formData.category && categoryArticles[formData.category]) {
@@ -71,24 +133,36 @@ const ReportForm: React.FC = () => {
   }, [formData.category, categoryArticles, dispatch]);
 
   useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => dispatch(setSuccess(false)), 1000);
+    if (
+      success &&
+      (selectedOperation?.name === "Выставить счёт" ||
+        selectedOperation?.name === "Выставить расход")
+    ) {
+      setIsModalOpen(true);
+    } else if (success) {
+      const timer = setTimeout(
+        () => dispatch(setSuccess({ success: false })),
+        2000
+      );
       return () => clearTimeout(timer);
     }
-  }, [success, dispatch]);
+  }, [success, dispatch, selectedOperation]);
 
   useEffect(() => {
     if (error) {
-      const timer = setTimeout(
-        () => dispatch(setFormDataField({ name: "error", value: "" })),
-        3000
-      );
+      const timer = setTimeout(() => dispatch(clearError()), 3000);
       return () => clearTimeout(timer);
     }
   }, [error, dispatch]);
 
-  const handleChange = (name: string, value: string) => {
+  useEffect(() => {
+    dispatch(setFormDataField({ name: "category", value: "" }));
+    dispatch(setFormDataField({ name: "article", value: "" }));
+  }, [formData.company, dispatch]);
+
+  const handleChange = (name: keyof FormData, value: string) => {
     dispatch(setFormDataField({ name, value }));
+    setValidationErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const handleDateChange = (date: Date | undefined) => {
@@ -97,65 +171,151 @@ const ReportForm: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!operations.length) {
+
+    const validationSchema = getValidationSchema(
+      formData,
+      operation_types,
+      wallets,
+      counterparties,
+      operationCategories,
+      categoryArticles
+    );
+
+    const result = validationSchema.safeParse(formData);
+    if (!result.success) {
+      const errors = result.error.flatten().fieldErrors;
+
+      setValidationErrors(
+        Object.keys(errors).reduce(
+          (acc, key) => ({
+            ...acc,
+            [key]: (errors as Record<string, string[]>)[key]?.[0] || "",
+          }),
+          {}
+        )
+      );
       dispatch(
-        setFormDataField({ name: "error", value: "Операции не загружены" })
+        setFormDataField({
+          name: "comment",
+          value: "Заполните все обязательные поля корректно",
+        })
       );
       return;
     }
-    dispatch(submitForm({ ...formData, operations, username: username ?? "" }));
+
+    try {
+      const payload = createSubmitPayload(
+        formData,
+        operation_types,
+        companies,
+        currencies,
+        reduxState
+      );
+
+      const validationError = validateSubmitPayload(payload, selectedOperation);
+      if (validationError) {
+        dispatch(setFormDataField({ name: "comment", value: validationError }));
+        return;
+      }
+
+      await dispatch(submitForm(payload)).unwrap();
+
+      if (
+        selectedOperation?.name === "Выставить счёт" ||
+        selectedOperation?.name === "Выставить расход"
+      ) {
+        const result = await dispatch(fetchInvoices()).unwrap();
+        const invoices = result.items || [];
+
+        const latestInvoice = invoices.reduce(
+          (latest: Invoice | null, current: Invoice) => {
+            if (!latest || current.id > latest.id) {
+              return current;
+            }
+            return latest;
+          },
+          null
+        );
+
+        if (latestInvoice) {
+          setCreatedInvoice(latestInvoice);
+          setIsModalOpen(true);
+        } else {
+          dispatch(
+            setFormDataField({
+              name: "comment",
+              value: "Не удалось загрузить созданный счет",
+            })
+          );
+        }
+
+        await refreshInvoices();
+      }
+    } catch (err) {
+      dispatch(setFormDataField({ name: "comment", value: String(err) }));
+    }
   };
 
-  const operationOptions = createOptions(operations, "id", (op) => op.name);
-  const paymentOptions = createOptions(paymentTypes, "name");
-  const walletOptions = createOptions(
-    wallets,
-    "name",
-    (w) => `${w.name} (${w.username})`
-  );
-  const currencyOptions = createOptions(currencies, "code", (c) => c.name);
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setCreatedInvoice(null);
+    dispatch(setSuccess({ success: false }));
+  };
 
-  const selectedOperation = operations.find(
-    (op) => op.id === Number(formData.operation)
-  );
+  const isTransfer = selectedOperation?.name === "Перемещение";
+  const isTransferValid =
+    formData.wallet_from.trim() !== "" && formData.wallet_to.trim() !== "";
 
   return (
     <form
       onSubmit={handleSubmit}
       className="py-10 px-4 bg-white flex flex-col gap-2.5 w-full h-screen mx-auto mt-1.5 rounded-t-[13px]"
     >
+      <SelectField
+        name="company"
+        value={formData.company}
+        options={companyOptions}
+        placeholder="Компания *"
+        onChange={handleChange}
+        required
+        error={validationErrors.company}
+        className="mb-3.5 w-full text-sm text-black placeholder:text-gray-400"
+      />
       <div className="relative mb-3.5">
         <DatePicker
           value={formData.date ? new Date(formData.date) : undefined}
           onChange={handleDateChange}
-          disabled={true}
-          className="text-black"
+          className={validationErrors.date ? "border-red-500" : "text-black"}
         />
+        {validationErrors.date && <ErrorMessage />}
       </div>
       <SelectField
         name="operation"
         value={formData.operation}
         options={operationOptions}
-        placeholder="Вид операции"
+        placeholder="Вид операции *"
         onChange={handleChange}
         required
+        error={validationErrors.operation}
         className="mb-3.5 w-full text-sm text-black placeholder:text-gray-400"
       />
-      {selectedOperation?.name === "Перемещение" ? (
+      {showTransferForm ? (
         <TransferForm
           formData={formData}
-          wallets={wallets}
           handleChange={handleChange}
+          errors={validationErrors}
         />
       ) : (
         <NoneTransferForm
           formData={formData}
-          operations={operations}
+          operation_types={operation_types}
           operationCategories={operationCategories}
           categoryArticles={categoryArticles}
+          companies={companies}
           handleChange={handleChange}
+          errors={validationErrors}
         />
       )}
       <div className="flex sm:flex-row gap-3 sm:gap-5 mb-3.5">
@@ -164,27 +324,30 @@ const ReportForm: React.FC = () => {
           name="amount"
           value={formData.amount}
           onChange={(e) => handleChange("amount", e.target.value)}
-          placeholder="Сумма"
-          className="w-1/2"
+          placeholder="Сумма *"
+          className="grow text-sm text-black placeholder:text-gray-400"
           required
+          error={validationErrors.amount}
         />
         <SelectField
           name="currency"
           value={formData.currency}
           options={currencyOptions}
-          placeholder="Валюта"
+          placeholder="Валюта *"
           onChange={handleChange}
           required
-          className="w-1/2   text-sm text-black truncate placeholder:text-gray-400"
+          error={validationErrors.currency}
+          className="text-sm text-black truncate placeholder:text-gray-400"
         />
       </div>
       <SelectField
         name="payment_type"
         value={formData.payment_type}
         options={paymentOptions}
-        placeholder="Способ оплаты"
+        placeholder="Способ оплаты *"
         onChange={handleChange}
         required
+        error={validationErrors.payment_type}
         className="w-full text-sm text-black truncate mb-3.5 placeholder:text-gray-400"
       />
       <Textarea
@@ -192,29 +355,52 @@ const ReportForm: React.FC = () => {
         value={formData.comment}
         onChange={(e) => handleChange("comment", e.target.value)}
         placeholder="Назначение платежа"
-        className="my-1 min-h-[70px]  "
+        className="my-1 min-h-[70px]"
       />
-      {selectedOperation?.name !== "Перемещение" && (
+      {showCounterpartyField ? (
         <SelectField
-          name="wallet"
-          value={formData.wallet}
-          options={walletOptions}
-          placeholder="Кошелёк"
+          name="counterparty"
+          value={formData.counterparty}
+          options={counterpartyOptions}
+          placeholder="Выберите контрагента *"
           onChange={handleChange}
           required
-          className="my-3.5 w-full text-sm text-black "
+          error={validationErrors.counterparty}
+          className="my-3.5 w-full text-sm text-black placeholder:text-gray-400"
         />
+      ) : (
+        selectedOperation?.name !== "Перемещение" && (
+          <SelectField
+            name="wallet"
+            value={formData.wallet}
+            options={walletOptions}
+            placeholder="Кошелёк *"
+            onChange={handleChange}
+            required={
+              selectedOperation?.name === "Приход" ||
+              selectedOperation?.name === "Расход"
+            }
+            error={validationErrors.wallet}
+            className="my-3.5 w-full text-sm text-black"
+          />
+        )
       )}
       <Button
         type="submit"
-        disabled={loading}
+        disabled={loading || (isTransfer ? !isTransferValid : !isFormValid)}
         className="mb-3.5 w-full bg-[#25fcf1] hover:bg-[#25fcf1aa] text-black font-light p-5 rounded-[8px] text-sm sm:text-base"
       >
         Отправить
       </Button>
       {loading && <Loader />}
-      {success && <SuccessMessage />}
+      {showSuccessMessage && <SuccessMessage />}
       {error && <ErrorMessage />}
+      <CounterpartyModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        invoice={createdInvoice}
+        refreshInvoices={refreshInvoices}
+      />
     </form>
   );
 };

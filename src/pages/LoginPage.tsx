@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { authService } from "@/services/authService";
-import { useAppDispatch } from "@/hooks/hooks";
-import { login } from "@/store/slices/authSlice";
-import { Input } from "@/ui/input";
+import { useDispatch, useSelector } from "react-redux";
+import { login, clearError } from "@/store/slices/authSlice";
+import type { AppDispatch, RootState } from "@/store/store";
 import { Button } from "@/ui/button";
+import { Input } from "@/ui/input";
+import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -25,12 +25,30 @@ const LoginPage: React.FC = () => {
     password?: string;
     general?: string;
   }>({});
-  const dispatch = useAppDispatch();
+
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+
+  const loading = useSelector((state: RootState) => state.auth.loading);
+  const authError = useSelector((state: RootState) => state.auth.error);
+  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+
+  React.useEffect(() => {
+    if (authError) {
+      setErrors({ general: authError });
+    }
+  }, [authError]);
+
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      navigate(`/tg_bot_add?username=${username}`);
+    }
+  }, [isAuthenticated, username, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
+    dispatch(clearError());
 
     const result = loginSchema.safeParse({ username, password });
 
@@ -42,16 +60,8 @@ const LoginPage: React.FC = () => {
       });
       return;
     }
-
-    try {
-      const { access_token } = await authService.login({ username, password });
-      dispatch(login({ username, access_token }));
-      navigate(`/tg_bot_add?username=${username}`);
-    } catch (err) {
-      setErrors({
-        general: err instanceof Error ? err.message : "Ошибка авторизации",
-      });
-    }
+    await dispatch(login({ username, password })).unwrap();
+    navigate(`/tg_bot_add?username=${username}`);
   };
 
   return (
@@ -108,8 +118,12 @@ const LoginPage: React.FC = () => {
             </p>
           )}
         </div>
-        <Button type="submit" className="w-full text-sm sm:text-base">
-          Войти
+        <Button
+          type="submit"
+          className="w-full text-sm sm:text-base"
+          disabled={loading}
+        >
+          {loading ? "Вход..." : "Войти"}
         </Button>
       </form>
     </div>
