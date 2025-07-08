@@ -1,45 +1,61 @@
 import React from "react";
 import { DatePicker } from "@/ui/date-picker";
 import SelectField from "@/ui/select-field";
+import ErrorMessage from "@/ui/error-message"; 
+import type { Company } from "@/types/api";
+import type { FormData } from "@/types/forms";
 
 interface NoneTransferFormProps {
   formData: {
+    company: string;
     category: string;
     article: string;
     date_finish: string;
     operation: string;
   };
-  operations: { id: number; name: string }[];
+  operation_types: { id: number; name: string }[];
   operationCategories: Record<string, string[]>;
   categoryArticles: Record<string, string[]>;
-  handleChange: (name: string, value: string) => void;
+  companies: Company[];
+  handleChange: (name: keyof FormData, value: string) => void;
+  errors: Record<string, string>; 
 }
 
 const NoneTransferForm: React.FC<NoneTransferFormProps> = ({
   formData,
-  operations,
-  operationCategories,
-  categoryArticles,
+  operation_types,
+  companies,
   handleChange,
+  errors,
 }) => {
-  const selectedOperation = operations.find(
+  const selectedOperation = operation_types.find(
     (op) => op.id === Number(formData.operation)
   );
-  const operationName = selectedOperation?.name || "";
-  const categoryOptions = Array.from(
-    new Set(operationCategories[operationName] || [])
-  ).map((cat, index) => ({
-    value: cat,
-    label: cat,
-    key: `${cat}-${index}`,
-  }));
-  const articleOptions = Array.from(
-    new Set(categoryArticles[formData.category] || [])
-  ).map((art, index) => ({
-    value: art,
-    label: art,
-    key: `${art}-${index}`,
-  }));
+  const operationId = selectedOperation ? String(selectedOperation.id) : "";
+
+  const selectedCompany = companies.find(
+    (company) => String(company.id) === formData.company
+  );
+
+  const categoryOptions = selectedCompany
+    ? selectedCompany.categories
+        .filter((cat) => cat.operation_type_id === Number(operationId))
+        .map((cat, index) => ({
+          value: cat.name,
+          label: cat.name,
+          key: `${cat.name}-${index}`,
+        }))
+    : [];
+
+  const articleOptions = selectedCompany
+    ? selectedCompany.categories
+        .find((cat) => cat.name === formData.category)
+        ?.articles.map((art, index) => ({
+          value: art.title,
+          label: art.title,
+          key: `${art.title}-${index}`,
+        })) || []
+    : [];
 
   const handleDateChange = (selectedDate: Date | undefined) => {
     handleChange(
@@ -50,7 +66,7 @@ const NoneTransferForm: React.FC<NoneTransferFormProps> = ({
 
   return (
     <>
-      <div className="flex sm:flex-row gap-3 mb-3.5">
+      <div className="flex flex-row gap-3 mb-3.5">
         <SelectField
           name="category"
           value={formData.category}
@@ -58,6 +74,8 @@ const NoneTransferForm: React.FC<NoneTransferFormProps> = ({
           placeholder="Категория"
           onChange={handleChange}
           required
+          error={errors.category}
+          className="flex-1 text-sm text-black placeholder:text-gray-400"
         />
         <SelectField
           name="article"
@@ -66,6 +84,8 @@ const NoneTransferForm: React.FC<NoneTransferFormProps> = ({
           placeholder="Статья"
           onChange={handleChange}
           required
+          error={errors.article}
+          className="flex-1 text-sm text-black placeholder:text-gray-400"
         />
       </div>
       <div className="date-wrapper mb-3.5">
@@ -74,7 +94,9 @@ const NoneTransferForm: React.FC<NoneTransferFormProps> = ({
             formData.date_finish ? new Date(formData.date_finish) : undefined
           }
           onChange={handleDateChange}
+          className={errors.date_finish ? "border-red-500" : ""}
         />
+        {errors.date_finish && <ErrorMessage />}
       </div>
     </>
   );

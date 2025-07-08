@@ -1,57 +1,87 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Route, Routes, useNavigate, useLocation } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "./hooks/hooks";
-import { logout } from "./store/slices/authSlice";
+import { logout, verifyToken, refreshToken } from "./store/slices/authSlice";
+import type { AppDispatch } from "./store/store";
+import {
+  selectIsAuthenticated,
+  selectUsername,
+  selectAuthLoading,
+  selectAuthStatus,
+} from "./store/selectors/authSelectors";
 import ReportFormPage from "./pages/ReportFormPage";
 import LoginPage from "./pages/LoginPage";
-import { checkToken } from "./services/authService";
-import { AxiosError } from "axios";
+import InvoicePage from "./pages/InvoicePage";
 
 function App() {
-  const { isAuthenticated, username } = useAppSelector((state) => state.auth);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const username = useAppSelector(selectUsername);
+  const loading = useAppSelector(selectAuthLoading);
+  const authStatus = useAppSelector(selectAuthStatus);
+
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
+  const dispatch = useAppDispatch() as AppDispatch;
+  const location = useLocation();
 
   const params = new URLSearchParams(location.search);
   const url_name = params.get("username");
 
   useEffect(() => {
-    const accessToken = localStorage.getItem("access_token");
+    const initializeAuth = async () => {
+      if (isAuthenticated) {
+        return;
+      }
 
-    const checkAuth = async () => {
-      if (!accessToken) {
+      const storedToken = localStorage.getItem("access_token");
+
+      if (!storedToken) {
         dispatch(logout());
-        navigate("/", { replace: true });
+        navigate("/tg_bot_add", { replace: true });
         return;
       }
 
       try {
-        await checkToken(accessToken);
-      } catch (error: unknown) {
-        if (error instanceof AxiosError && error.response?.status === 401) {
-          localStorage.removeItem("access_token");
+        await dispatch(verifyToken(storedToken));
+      } catch (error) {
+        console.log(error);
+        try {
+          await dispatch(refreshToken());
+        } catch (refreshError) {
+          console.log(refreshError);
           dispatch(logout());
-          navigate("/", { replace: true });
-        } else {
-          console.error("Token check failed:", error);
+          navigate("/tg_bot_add", { replace: true });
         }
       }
     };
 
-    checkAuth();
-    const intervalId = setInterval(checkAuth, 3 * 60 * 1000);
+    initializeAuth();
+  }, [dispatch, navigate, isAuthenticated]);
 
-    return () => clearInterval(intervalId);
-  }, [navigate, dispatch]);
+  if (loading && authStatus === "loading") {
+    return (
+      <div className="min-h-screen bg-[#f4f3e9] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-gray-600">Проверка авторизации...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <>
-      {isAuthenticated && username === url_name ? (
-        <ReportFormPage />
+    <Routes>
+      {isAuthenticated ? (
+        <>
+          <Route
+            path="/tg_bot_add"
+            element={username === url_name ? <ReportFormPage /> : <LoginPage />}
+          />
+          <Route path="/tg_bot_add/invoice" element={<InvoicePage />} />
+        </>
       ) : (
-        <LoginPage />
+        <Route path="*" element={<LoginPage />} />
       )}
-    </>
+    </Routes>
   );
 }
 
