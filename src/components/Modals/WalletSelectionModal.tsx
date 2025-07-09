@@ -105,7 +105,7 @@ const WalletSelectionModal: React.FC<WalletSelectionModalProps> = ({
       <p className="text-xl font-bold mb-6 text-gray-900">
         {isContractor
           ? "на который поступили средства"
-          : "с которого будут списаны средства"}
+          : "с которого нужно перекрыть расход контрагента"}
       </p>
 
       {loading ? (
