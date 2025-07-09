@@ -1,7 +1,6 @@
 import axios from "axios";
 
-export const API_URL = import.meta.env.VITE_API_URL;
-// export const API_URL = "http://localhost:8000";
+export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export const $api = axios.create({
   withCredentials: true,
@@ -38,9 +37,13 @@ $api.interceptors.response.use(
 
       try {
         // Пробуем обновить токен
-        const response = await axios.post(`${API_URL}/refresh`, {}, {
-          withCredentials: true,
-        });
+        const response = await axios.post(
+          `${API_URL}/refresh`,
+          {},
+          {
+            withCredentials: true,
+          }
+        );
 
         const newToken = response.data.access_token;
         localStorage.setItem("access_token", newToken);
