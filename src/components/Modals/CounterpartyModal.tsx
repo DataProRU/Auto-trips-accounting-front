@@ -12,7 +12,7 @@ import WalletSelectionModal from "./WalletSelectionModal";
 import { useAppDispatch } from "@/hooks/hooks";
 
 import { fetchInvoicePdf } from "@/services/invoiceService";
-import { copyToClipboard, downloadPdf } from "@/store/selectors/invoiceSelectors";
+import { downloadPdf } from "@/store/selectors/invoiceSelectors";
 
 import { setFormDataField } from "@/store/slices/reportSlice";
 import { openWalletSelection } from "@/store/slices/walletSelectionSlice";
@@ -36,6 +36,10 @@ const CounterpartyModal: React.FC<CounterpartyModalProps> = ({
   const [pdfLoading, setPdfLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showToast, setShowToast] = useState(false);
+
+  // Функция для получения серверного URL PDF
+  const getInvoicePdfUrl = (invoiceId: number) =>
+    `https://finance.workshop-garage.ru/api/financial_operation/${invoiceId}/pdf`;
 
   useEffect(() => {
     setIsMobile(/Mobi|Android|iPhone/i.test(navigator.userAgent));
@@ -67,9 +71,11 @@ const CounterpartyModal: React.FC<CounterpartyModalProps> = ({
   }, [invoice]);
 
   const handleCopyLink = useCallback(async () => {
-    await copyToClipboard(pdfUrl || window.location.href);
-    setShowToast(true);
-  }, [pdfUrl]);
+    if (invoice) {
+      await navigator.clipboard.writeText(getInvoicePdfUrl(invoice.id));
+      setShowToast(true);
+    }
+  }, [invoice]);
 
   const handleOpenWalletModal = useCallback(() => {
     const isContractor = invoice?.operation_type.name === "Выставить счёт";

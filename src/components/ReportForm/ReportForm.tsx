@@ -53,6 +53,8 @@ import {
   selectCompanyOptions,
   selectCounterpartyOptions,
 } from "@/store/selectors/reportSelectors";
+import { useSelector } from "react-redux";
+import { selectIsWalletModalOpen } from "@/store/selectors/walletSelectionSelectors";
 
 const ReportForm: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -91,8 +93,11 @@ const ReportForm: React.FC = () => {
   >({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [createdInvoice, setCreatedInvoice] = useState<Invoice | null>(null);
+  const [wasSubmitted, setWasSubmitted] = useState(false);
 
   const reduxState = useAppSelector((state) => state as RootState);
+  const isWalletModalOpen = useSelector(selectIsWalletModalOpen);
+  const isAnyModalOpen = isModalOpen || isWalletModalOpen;
 
   const refreshInvoices = useCallback(async () => {
     try {
@@ -173,6 +178,7 @@ const ReportForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setWasSubmitted(true);
 
     const validationSchema = getValidationSchema(
       formData,
@@ -280,16 +286,16 @@ const ReportForm: React.FC = () => {
         placeholder="Компания *"
         onChange={handleChange}
         required
-        error={validationErrors.company}
+        error={wasSubmitted && !isAnyModalOpen ? validationErrors.company : undefined}
         className="mb-3.5 w-full text-sm text-black placeholder:text-gray-400"
       />
       <div className="relative mb-3.5">
         <DatePicker
           value={formData.date ? new Date(formData.date) : undefined}
           onChange={handleDateChange}
-          className={validationErrors.date ? "border-red-500" : "text-black"}
+          className={wasSubmitted && !isAnyModalOpen && validationErrors.date ? "border-red-500" : "text-black"}
         />
-        {validationErrors.date && <ErrorMessage />}
+        {wasSubmitted && !isAnyModalOpen && validationErrors.date && <ErrorMessage />}
       </div>
       <SelectField
         name="operation"
@@ -298,14 +304,14 @@ const ReportForm: React.FC = () => {
         placeholder="Вид операции *"
         onChange={handleChange}
         required
-        error={validationErrors.operation}
+        error={wasSubmitted && !isAnyModalOpen ? validationErrors.operation : undefined}
         className="mb-3.5 w-full text-sm text-black placeholder:text-gray-400"
       />
       {showTransferForm ? (
         <TransferForm
           formData={formData}
           handleChange={handleChange}
-          errors={validationErrors}
+          errors={wasSubmitted && !isAnyModalOpen ? validationErrors : {}}
         />
       ) : (
         <NoneTransferForm
@@ -315,7 +321,7 @@ const ReportForm: React.FC = () => {
           categoryArticles={categoryArticles}
           companies={companies}
           handleChange={handleChange}
-          errors={validationErrors}
+          errors={wasSubmitted && !isAnyModalOpen ? validationErrors : {}}
         />
       )}
       <div className="flex sm:flex-row gap-3 sm:gap-5 mb-3.5">
@@ -325,9 +331,9 @@ const ReportForm: React.FC = () => {
           value={formData.amount}
           onChange={(e) => handleChange("amount", e.target.value)}
           placeholder="Сумма *"
-          className="grow text-sm text-black placeholder:text-gray-400"
-          required
-          error={validationErrors.amount}
+          className="grow text-sm text-black placeholder:text-gray-400 border-gray-200"
+
+          error={wasSubmitted && !isAnyModalOpen ? validationErrors.amount : undefined}
         />
         <SelectField
           name="currency"
@@ -336,7 +342,7 @@ const ReportForm: React.FC = () => {
           placeholder="Валюта *"
           onChange={handleChange}
           required
-          error={validationErrors.currency}
+          error={wasSubmitted && !isAnyModalOpen ? validationErrors.currency : undefined}
           className="text-sm text-black truncate placeholder:text-gray-400"
         />
       </div>
@@ -347,7 +353,7 @@ const ReportForm: React.FC = () => {
         placeholder="Способ оплаты *"
         onChange={handleChange}
         required
-        error={validationErrors.payment_type}
+        error={wasSubmitted && !isAnyModalOpen ? validationErrors.payment_type : undefined}
         className="w-full text-sm text-black truncate mb-3.5 placeholder:text-gray-400"
       />
       <Textarea
@@ -365,7 +371,7 @@ const ReportForm: React.FC = () => {
           placeholder="Выберите контрагента *"
           onChange={handleChange}
           required
-          error={validationErrors.counterparty}
+          error={wasSubmitted && !isAnyModalOpen ? validationErrors.counterparty : undefined}
           className="my-3.5 w-full text-sm text-black placeholder:text-gray-400"
         />
       ) : (
@@ -380,7 +386,7 @@ const ReportForm: React.FC = () => {
               selectedOperation?.name === "Приход" ||
               selectedOperation?.name === "Расход"
             }
-            error={validationErrors.wallet}
+            error={wasSubmitted && !isAnyModalOpen ? validationErrors.wallet : undefined}
             className="my-3.5 w-full text-sm text-black"
           />
         )

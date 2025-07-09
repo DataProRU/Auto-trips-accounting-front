@@ -144,7 +144,6 @@ const WalletSelectionModal: React.FC<WalletSelectionModalProps> = ({
             options={walletOptions}
             placeholder="Выпадающий список"
             onChange={handleChange}
-            required
             error={error && !selectedWallet ? "Выберите кошелек" : undefined}
             className="w-full text-sm text-black"
           />

@@ -104,7 +104,6 @@ export const selectIsFormValid = (state: RootState): boolean => {
     formData.amount,
     formData.currency,
     formData.payment_type,
-    formData.date_finish,
   ];
 
   const basicFieldsValid = basicFields.every(field => field && field.trim() !== "");

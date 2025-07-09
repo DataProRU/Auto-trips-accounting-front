@@ -10,7 +10,7 @@ import ErrorMessage from "@/ui/error-message"; // Import ErrorMessage component
 interface SelectOption {
   value: string;
   label: string;
-  key?: string; // Add key to match ReportForm's createOptions
+  key?: string; 
 }
 
 interface SelectFieldProps<T extends string = string> {
@@ -21,7 +21,7 @@ interface SelectFieldProps<T extends string = string> {
   onChange: (name: T, value: string) => void;
   required?: boolean;
   className?: string;
-  error?: string; // Add error prop for validation messages
+  error?: string;
 }
 
 const SelectField = <T extends string = string>({
@@ -30,7 +30,6 @@ const SelectField = <T extends string = string>({
   options,
   placeholder,
   onChange,
-  required = false,
   className = "w-full text-sm truncate",
   error,
 }: SelectFieldProps<T>) => (
@@ -39,7 +38,7 @@ const SelectField = <T extends string = string>({
       name={name}
       value={value}
       onValueChange={(value) => onChange(name, value)}
-      required={required}
+      required={false}
     >
       <SelectTrigger
         className={`${className} ${error ? "border-red-500" : ""}`}

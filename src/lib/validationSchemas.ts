@@ -1,9 +1,9 @@
 import { z } from "zod";
 import type { FormData } from "@/types/forms";
-import type { 
-  OperationType, 
-  Wallet, 
-  Counterparty 
+import type {
+  OperationType,
+  Wallet,
+  Counterparty,
 } from "@/models/response/ReportResponse";
 
 // Базовые поля для всех операций
@@ -18,7 +18,7 @@ const baseFields = {
     }),
   currency: z.string().min(1, "Валюта обязательна"),
   payment_type: z.string().min(1, "Способ оплаты обязателен"),
-  date_finish: z.string().min(1, "Дата обязательна"),
+  date_finish: z.string().optional(),
   comment: z.string().optional(),
 };
 
