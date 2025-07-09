@@ -202,12 +202,6 @@ const ReportForm: React.FC = () => {
           {}
         )
       );
-      dispatch(
-        setFormDataField({
-          name: "comment",
-          value: "Заполните все обязательные поля корректно",
-        })
-      );
       return;
     }
 
@@ -267,7 +261,9 @@ const ReportForm: React.FC = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setCreatedInvoice(null);
+    setWasSubmitted(false); // Сбросить флаг отправки
     dispatch(setSuccess({ success: false }));
+    dispatch(setFormDataField({ name: "comment", value: "" }));
   };
 
   const isTransfer = selectedOperation?.name === "Перемещение";
