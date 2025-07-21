@@ -1,8 +1,9 @@
-import React, { useEffect } from "react";
+import React, {useEffect, useState} from "react";
 import { useSelector } from "react-redux";
 import { X } from "lucide-react";
 
 import { Button } from "@/ui/button";
+import {Input} from "@/ui/input.tsx";
 import SelectField from "@/ui/select-field";
 import Modal from "@/ui/Modal";
 
@@ -32,11 +33,13 @@ import {
 interface WalletSelectionModalProps {
   refreshInvoices: () => Promise<void>;
   onConfirm: () => void;
+  amount: number;
 }
 
 const WalletSelectionModal: React.FC<WalletSelectionModalProps> = ({
   refreshInvoices,
   onConfirm,
+  amount
 }) => {
   const dispatch = useAppDispatch();
   const isOpen = useSelector(selectIsWalletModalOpen);
@@ -50,6 +53,9 @@ const WalletSelectionModal: React.FC<WalletSelectionModalProps> = ({
   const walletOptions = useSelector(selectWalletOptions);
   const canConfirm = useSelector(selectCanConfirmWalletSelection);
   const isDisabled = useSelector(selectWalletSelectionDisabled);
+
+  const [amountState, setAmountState] = useState(amount);
+  const [amountError, setAmountError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen && wallets.length === 0) {
@@ -66,8 +72,13 @@ const WalletSelectionModal: React.FC<WalletSelectionModalProps> = ({
       return;
     }
 
+    if (amountState > amount) {
+      setAmountError(`Сумма не может превышать ${amount}`);
+      return;
+    }
+
     await dispatch(
-      markInvoiceAsPaidAction(invoiceId, parseInt(selectedWallet), isContractor)
+      markInvoiceAsPaidAction(invoiceId, parseInt(selectedWallet), amountState, isContractor)
     );
     await refreshInvoices();
     onConfirm();
@@ -107,6 +118,18 @@ const WalletSelectionModal: React.FC<WalletSelectionModalProps> = ({
           ? "на который поступили средства"
           : "с которого нужно перекрыть расход контрагента"}
       </p>
+      <div className="text-center mb-4">
+        <Input
+            type="number"
+            value={amountState}
+            onChange={(e) => setAmountState(parseFloat(e.target.value))}
+            placeholder="Сумма"
+            className="w-full"
+        />
+        {amountError && (
+            <p className="text-red-500 text-sm mt-1">{amountError}</p>
+        )}
+      </div>
 
       {loading ? (
         <p className="text-gray-500 text-center mb-6">Загрузка кошельков...</p>
@@ -155,7 +178,7 @@ const WalletSelectionModal: React.FC<WalletSelectionModalProps> = ({
         size="lg"
         className="w-full text-lg"
         onClick={handleConfirm}
-        disabled={!canConfirm || isDisabled}
+        disabled={!canConfirm  || !amountState || isDisabled}
       >
         {submitting ? "Сохранение..." : "Сохранить"}
       </Button>

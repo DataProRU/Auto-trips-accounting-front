@@ -5,7 +5,7 @@ import {
 
 import type { Wallet } from "@/types/api";
 import type { AppDispatch } from "@/store/store";
-import type { 
+import type {
   OpenWalletSelectionPayload,
   SetSelectedWalletPayload,
   SetWalletLoadingPayload,
@@ -52,7 +52,7 @@ const walletSelectionSlice = createSlice({
   initialState,
   reducers: {},
   extraReducers: (builder) => {
-    
+
     builder.addCase(openWalletSelection, (state, action) => {
       state.isOpen = true;
       state.invoiceId = action.payload.invoiceId;
@@ -129,10 +129,10 @@ export const loadWallets = () => async (dispatch: AppDispatch) => {
 };
 
 export const markInvoiceAsPaidAction =
-  (invoiceId: number, walletId: number, isContractor: boolean) => async (dispatch: AppDispatch) => {
+  (invoiceId: number, walletId: number, amount: number, isContractor: boolean) => async (dispatch: AppDispatch) => {
     dispatch(setSubmitting({ submitting: true }));
     try {
-      await markInvoiceAsPaid(invoiceId, walletId, isContractor);
+      await markInvoiceAsPaid(invoiceId, walletId, amount, isContractor);
       dispatch(setSubmitting({ submitting: false }));
       dispatch(closeWalletSelection());
     } catch (error: unknown) {

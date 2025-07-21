@@ -31,11 +31,11 @@ export const fetchInvoicePdf = async (invoiceId: number): Promise<string> => {
         },
       }
     );
-    
+
     if (response.data.type !== "application/pdf") {
       throw new Error("Получен неверный формат файла (не PDF)");
     }
-    
+
     return URL.createObjectURL(
       new Blob([response.data], { type: "application/pdf" })
     );
@@ -66,11 +66,13 @@ export const fetchWallets = async (): Promise<Wallet[]> => {
 export const markInvoiceAsPaid = async (
   invoiceId: number,
   walletId: number,
+  amount: number,
   isContractor: boolean
 ): Promise<void> => {
   try {
     await $api.patch(`/api/invoices/${invoiceId}/pay`, {
       wallet_id: walletId,
+      amount: amount,
       is_contractor: isContractor,
     });
   } catch (error) {

@@ -48,7 +48,10 @@ const InvoiceList: React.FC<InvoiceListProps> = ({
         <h2 className="text-lg font-semibold">
           Выставлено счетов: {currentData.items.length}
         </h2>
-        <p className="text-md">На сумму: {currentData.amount}</p>
+        <p className="text-md">На сумму: {currentData &&
+            Object.entries(currentData.amount).map(([symbol, amount]) => (
+                <span key={symbol} className="inline-block mx-1">{amount} {symbol}</span>
+            ))}</p>
       </div>
       <ol className="list-decimal mb-6 pl-8 overflow-y-scroll max-h-[56vh] flex flex-col  gap-5">
         {currentData.items.map((item, index) => (
@@ -58,6 +61,9 @@ const InvoiceList: React.FC<InvoiceListProps> = ({
             onClick={() => onInvoiceClick(item.invoice)}
           >
             {item.description}
+            {item.invoice.comment && (
+                <div>{item.invoice.comment}</div>
+            )}
           </li>
         ))}
       </ol>
