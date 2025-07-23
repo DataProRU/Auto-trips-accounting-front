@@ -60,6 +60,7 @@ export interface Invoice {
   date: string;
   finish_date: string;
   amount: number;
+  remainder: number;
   is_paid: boolean;
   created_at: string;
   comment: string;
@@ -96,4 +97,4 @@ export interface ISubmitPayload {
 export interface InvoiceResponse {
   items: Invoice[];
   total: number;
-} 
+}

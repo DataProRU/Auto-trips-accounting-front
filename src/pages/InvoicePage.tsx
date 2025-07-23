@@ -81,7 +81,7 @@ const InvoicePage: React.FC = () => {
     ? invoices.items.filter((invoice: Invoice) =>
         view === "contractors"
           ? invoice.operation_type.name === "Выставить счёт" && !invoice.is_paid
-          : invoice.operation_type.name !== "Выставить счёт"
+          : invoice.operation_type.name !== "Выставить счёт" && !invoice.is_paid
       )
     : [];
 

@@ -9,7 +9,7 @@ export interface SelectOption {
 
 export interface CurrentData {
   issuer: string;
-  amount: string;
+  amount: Record<string, number>;
   items: { number: number; description: string; invoice: Invoice }[];
 }
 
@@ -42,4 +42,4 @@ export interface PdfViewerProps {
   pdfError: string | null;
   pdfLoading: boolean;
   isMobile: boolean;
-} 
+}

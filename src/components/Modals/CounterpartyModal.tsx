@@ -164,6 +164,7 @@ const CounterpartyModal: React.FC<CounterpartyModalProps> = ({
       <WalletSelectionModal
         refreshInvoices={refreshInvoices}
         onConfirm={handleWalletModalConfirm}
+        amount={invoice.remainder}
       />
     </Modal>
   );
