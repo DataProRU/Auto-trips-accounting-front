@@ -23,7 +23,7 @@ export const fetchInvoicePdf = async (invoiceId: number): Promise<string> => {
   try {
     const token = localStorage.getItem("access_token");
     const response = await $api.get(
-      `/api/financial_operation/${invoiceId}/pdf`,
+      `/api/invoice/${invoiceId}/pdf`,
       {
         responseType: "blob",
         headers: {

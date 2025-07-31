@@ -39,7 +39,7 @@ const CounterpartyModal: React.FC<CounterpartyModalProps> = ({
 
   // Функция для получения серверного URL PDF
   const getInvoicePdfUrl = (invoiceId: number) =>
-    `https://finance.workshop-garage.ru/api/financial_operation/${invoiceId}/pdf`;
+    `https://finance.workshop-garage.ru/api/invoice/${invoiceId}/pdf`;
 
   useEffect(() => {
     setIsMobile(/Mobi|Android|iPhone/i.test(navigator.userAgent));
