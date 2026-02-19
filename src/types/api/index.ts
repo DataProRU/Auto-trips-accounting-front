@@ -19,6 +19,13 @@ export interface Company {
   categories: Category[];
 }
 
+export interface Client {
+  id?: number;
+  full_name: string;
+  phone: string;
+}
+
+
 export interface OperationType {
   id: number;
   name: string;
@@ -92,6 +99,12 @@ export interface ISubmitPayload {
   wallet_to_id: number;
   counterparty_id: number;
   currency_id: number | null;
+}
+
+export interface IClientInvoiceSubmitPayload {
+  username: string;
+  company_id: number;
+  client_id: number
 }
 
 export interface InvoiceResponse {

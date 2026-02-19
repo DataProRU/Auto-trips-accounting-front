@@ -1,24 +1,24 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
-import type { Invoice } from "@/types/api";
-import type { FormData } from "@/types/forms";
-import type { RootState } from "@/store/store";
+import React, { useState, useEffect, useCallback } from 'react';
+import { useAppDispatch, useAppSelector } from '@/hooks/hooks';
+import type { Invoice } from '@/types/api';
+import type { FormData } from '@/types/forms';
+import type { RootState } from '@/store/store';
 
-import { Button } from "@/ui/button";
-import { Input } from "@/ui/input";
-import { Textarea } from "@/ui/textarea";
-import { DatePicker } from "@/ui/date-picker";
-import ErrorMessage from "@/ui/error-message";
-import SelectField from "@/ui/select-field";
-import SuccessMessage from "@/ui/success-message";
-import Loader from "@/ui/loader";
-import TransferForm from "../TransferForm/TransferForm";
-import NoneTransferForm from "../NoneTransferForm/NoneTransferForm";
-import CounterpartyModal from "../Modals/CounterpartyModal";
-import { getValidationSchema } from "@/lib/validationSchemas";
+import { Button } from '@/ui/button';
+import { Input } from '@/ui/input';
+import { Textarea } from '@/ui/textarea';
+import { DatePicker } from '@/ui/date-picker';
+import ErrorMessage from '@/ui/error-message';
+import SelectField from '@/ui/select-field';
+import SuccessMessage from '@/ui/success-message';
+import Loader from '@/ui/loader';
+import TransferForm from '../TransferForm/TransferForm';
+import NoneTransferForm from '../NoneTransferForm/NoneTransferForm';
+import CounterpartyModal from '../Modals/CounterpartyModal';
+import { getReportValidationSchema } from '@/lib/validationSchemas';
 
-import { fetchInitialData, submitForm } from "@/services/reportService";
-import { fetchInvoices } from "@/store/slices/invoiceSlice";
+import { fetchInitialData, submitForm } from '@/services/reportService';
+import { fetchInvoices } from '@/store/slices/invoiceSlice';
 
 import {
   setFormDataField,
@@ -28,7 +28,7 @@ import {
   clearError,
   createSubmitPayload,
   validateSubmitPayload,
-} from "@/store/slices/reportSlice";
+} from '@/store/slices/reportSlice';
 import {
   selectFormData,
   selectOperationTypes,
@@ -36,7 +36,7 @@ import {
   selectCategoryArticles,
   selectOperationCategories,
   selectCurrencies,
-  selectCompanies,
+  selectReportCompanies,
   selectCounterparties,
   selectLoading,
   selectSuccess,
@@ -50,11 +50,12 @@ import {
   selectPaymentOptions,
   selectReportWalletOptions,
   selectCurrencyOptions,
-  selectCompanyOptions,
+  selectReportCompanyOptions,
   selectCounterpartyOptions,
-} from "@/store/selectors/reportSelectors";
-import { useSelector } from "react-redux";
-import { selectIsWalletModalOpen } from "@/store/selectors/walletSelectionSelectors";
+} from '@/store/selectors/reportSelectors';
+import { useSelector } from 'react-redux';
+import { selectIsWalletModalOpen } from '@/store/selectors/walletSelectionSelectors';
+import ReportInvoiceSwitcher from '../ReportInvoiceSwitcher/ReportInvoiceSwitcher';
 
 const ReportForm: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -67,7 +68,7 @@ const ReportForm: React.FC = () => {
   const operationCategories = useAppSelector(selectOperationCategories);
 
   const currencies = useAppSelector(selectCurrencies);
-  const companies = useAppSelector(selectCompanies);
+  const companies = useAppSelector(selectReportCompanies);
   const counterparties = useAppSelector(selectCounterparties);
   const loading = useAppSelector(selectLoading);
   const success = useAppSelector(selectSuccess);
@@ -85,7 +86,7 @@ const ReportForm: React.FC = () => {
   const paymentOptions = useAppSelector(selectPaymentOptions);
   const walletOptions = useAppSelector(selectReportWalletOptions);
   const currencyOptions = useAppSelector(selectCurrencyOptions);
-  const companyOptions = useAppSelector(selectCompanyOptions);
+  const companyOptions = useAppSelector(selectReportCompanyOptions);
   const counterpartyOptions = useAppSelector(selectCounterpartyOptions);
 
   const [validationErrors, setValidationErrors] = useState<
@@ -103,7 +104,7 @@ const ReportForm: React.FC = () => {
     try {
       await dispatch(fetchInvoices()).unwrap();
     } catch (err) {
-      console.error("Ошибка обновления счетов:", err);
+      console.error('Ошибка обновления счетов:', err);
     }
   }, [dispatch]);
 
@@ -113,13 +114,13 @@ const ReportForm: React.FC = () => {
 
   useEffect(() => {
     const operation = operation_types.find(
-      (op) => op.id === Number(formData.operation)
+      (op) => op.id === Number(formData.operation),
     );
     if (operation && operationCategories[String(operation.id)]) {
       dispatch(resetAccountingFields());
-      if (operation.name !== "Перемещение") {
-        dispatch(setFormDataField({ name: "wallet_from", value: "" }));
-        dispatch(setFormDataField({ name: "wallet_to", value: "" }));
+      if (operation.name !== 'Перемещение') {
+        dispatch(setFormDataField({ name: 'wallet_from', value: '' }));
+        dispatch(setFormDataField({ name: 'wallet_to', value: '' }));
       }
     }
   }, [
@@ -140,14 +141,14 @@ const ReportForm: React.FC = () => {
   useEffect(() => {
     if (
       success &&
-      (selectedOperation?.name === "Выставить счёт" ||
-        selectedOperation?.name === "Выставить расход")
+      (selectedOperation?.name === 'Выставить счёт' ||
+        selectedOperation?.name === 'Выставить расход')
     ) {
       setIsModalOpen(true);
     } else if (success) {
       const timer = setTimeout(
         () => dispatch(setSuccess({ success: false })),
-        2000
+        2000,
       );
       return () => clearTimeout(timer);
     }
@@ -161,18 +162,18 @@ const ReportForm: React.FC = () => {
   }, [error, dispatch]);
 
   useEffect(() => {
-    dispatch(setFormDataField({ name: "category", value: "" }));
-    dispatch(setFormDataField({ name: "article", value: "" }));
+    dispatch(setFormDataField({ name: 'category', value: '' }));
+    dispatch(setFormDataField({ name: 'article', value: '' }));
   }, [formData.company, dispatch]);
 
   const handleChange = (name: keyof FormData, value: string) => {
     dispatch(setFormDataField({ name, value }));
-    setValidationErrors((prev) => ({ ...prev, [name]: "" }));
+    setValidationErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
-      handleChange("date", date.toISOString().split("T")[0]);
+      handleChange('date', date.toISOString().split('T')[0]);
     }
   };
 
@@ -180,13 +181,13 @@ const ReportForm: React.FC = () => {
     e.preventDefault();
     setWasSubmitted(true);
 
-    const validationSchema = getValidationSchema(
+    const validationSchema = getReportValidationSchema(
       formData,
       operation_types,
       wallets,
       counterparties,
       operationCategories,
-      categoryArticles
+      categoryArticles,
     );
 
     const result = validationSchema.safeParse(formData);
@@ -197,10 +198,10 @@ const ReportForm: React.FC = () => {
         Object.keys(errors).reduce(
           (acc, key) => ({
             ...acc,
-            [key]: (errors as Record<string, string[]>)[key]?.[0] || "",
+            [key]: (errors as Record<string, string[]>)[key]?.[0] || '',
           }),
-          {}
-        )
+          {},
+        ),
       );
       return;
     }
@@ -211,20 +212,20 @@ const ReportForm: React.FC = () => {
         operation_types,
         companies,
         currencies,
-        reduxState
+        reduxState,
       );
 
       const validationError = validateSubmitPayload(payload, selectedOperation);
       if (validationError) {
-        dispatch(setFormDataField({ name: "comment", value: validationError }));
+        dispatch(setFormDataField({ name: 'comment', value: validationError }));
         return;
       }
 
       await dispatch(submitForm(payload)).unwrap();
 
       if (
-        selectedOperation?.name === "Выставить счёт" ||
-        selectedOperation?.name === "Выставить расход"
+        selectedOperation?.name === 'Выставить счёт' ||
+        selectedOperation?.name === 'Выставить расход'
       ) {
         const result = await dispatch(fetchInvoices()).unwrap();
         const invoices = result.items || [];
@@ -236,7 +237,7 @@ const ReportForm: React.FC = () => {
             }
             return latest;
           },
-          null
+          null,
         );
 
         if (latestInvoice) {
@@ -245,16 +246,16 @@ const ReportForm: React.FC = () => {
         } else {
           dispatch(
             setFormDataField({
-              name: "comment",
-              value: "Не удалось загрузить созданный счет",
-            })
+              name: 'comment',
+              value: 'Не удалось загрузить созданный счет',
+            }),
           );
         }
 
         await refreshInvoices();
       }
     } catch (err) {
-      dispatch(setFormDataField({ name: "comment", value: String(err) }));
+      dispatch(setFormDataField({ name: 'comment', value: String(err) }));
     }
   };
 
@@ -263,18 +264,19 @@ const ReportForm: React.FC = () => {
     setCreatedInvoice(null);
     setWasSubmitted(false); // Сбросить флаг отправки
     dispatch(setSuccess({ success: false }));
-    dispatch(setFormDataField({ name: "comment", value: "" }));
+    dispatch(setFormDataField({ name: 'comment', value: '' }));
   };
 
-  const isTransfer = selectedOperation?.name === "Перемещение";
+  const isTransfer = selectedOperation?.name === 'Перемещение';
   const isTransferValid =
-    formData.wallet_from.trim() !== "" && formData.wallet_to.trim() !== "";
+    formData.wallet_from.trim() !== '' && formData.wallet_to.trim() !== '';
 
   return (
     <form
       onSubmit={handleSubmit}
       className="py-10 px-4 bg-white flex flex-col gap-2.5 w-full h-screen mx-auto mt-1.5 rounded-t-[13px]"
     >
+      <ReportInvoiceSwitcher activeTab="report" />
       <SelectField
         name="company"
         value={formData.company}
@@ -282,16 +284,24 @@ const ReportForm: React.FC = () => {
         placeholder="Компания *"
         onChange={handleChange}
         required
-        error={wasSubmitted && !isAnyModalOpen ? validationErrors.company : undefined}
+        error={
+          wasSubmitted && !isAnyModalOpen ? validationErrors.company : undefined
+        }
         className="mb-3.5 w-full text-sm text-black placeholder:text-gray-400"
       />
       <div className="relative mb-3.5">
         <DatePicker
           value={formData.date ? new Date(formData.date) : undefined}
           onChange={handleDateChange}
-          className={wasSubmitted && !isAnyModalOpen && validationErrors.date ? "border-red-500" : "text-black"}
+          className={
+            wasSubmitted && !isAnyModalOpen && validationErrors.date
+              ? 'border-red-500'
+              : 'text-black'
+          }
         />
-        {wasSubmitted && !isAnyModalOpen && validationErrors.date && <ErrorMessage />}
+        {wasSubmitted && !isAnyModalOpen && validationErrors.date && (
+          <ErrorMessage />
+        )}
       </div>
       <SelectField
         name="operation"
@@ -300,7 +310,11 @@ const ReportForm: React.FC = () => {
         placeholder="Вид операции *"
         onChange={handleChange}
         required
-        error={wasSubmitted && !isAnyModalOpen ? validationErrors.operation : undefined}
+        error={
+          wasSubmitted && !isAnyModalOpen
+            ? validationErrors.operation
+            : undefined
+        }
         className="mb-3.5 w-full text-sm text-black placeholder:text-gray-400"
       />
       {showTransferForm ? (
@@ -325,11 +339,14 @@ const ReportForm: React.FC = () => {
           type="number"
           name="amount"
           value={formData.amount}
-          onChange={(e) => handleChange("amount", e.target.value)}
+          onChange={(e) => handleChange('amount', e.target.value)}
           placeholder="Сумма *"
           className="grow text-sm text-black placeholder:text-gray-400 border-gray-200"
-
-          error={wasSubmitted && !isAnyModalOpen ? validationErrors.amount : undefined}
+          error={
+            wasSubmitted && !isAnyModalOpen
+              ? validationErrors.amount
+              : undefined
+          }
         />
         <SelectField
           name="currency"
@@ -338,7 +355,11 @@ const ReportForm: React.FC = () => {
           placeholder="Валюта *"
           onChange={handleChange}
           required
-          error={wasSubmitted && !isAnyModalOpen ? validationErrors.currency : undefined}
+          error={
+            wasSubmitted && !isAnyModalOpen
+              ? validationErrors.currency
+              : undefined
+          }
           className="text-sm text-black truncate placeholder:text-gray-400"
         />
       </div>
@@ -349,13 +370,17 @@ const ReportForm: React.FC = () => {
         placeholder="Способ оплаты *"
         onChange={handleChange}
         required
-        error={wasSubmitted && !isAnyModalOpen ? validationErrors.payment_type : undefined}
+        error={
+          wasSubmitted && !isAnyModalOpen
+            ? validationErrors.payment_type
+            : undefined
+        }
         className="w-full text-sm text-black truncate mb-3.5 placeholder:text-gray-400"
       />
       <Textarea
         name="comment"
         value={formData.comment}
-        onChange={(e) => handleChange("comment", e.target.value)}
+        onChange={(e) => handleChange('comment', e.target.value)}
         placeholder="Назначение платежа"
         className="my-1 min-h-[70px]"
       />
@@ -367,11 +392,15 @@ const ReportForm: React.FC = () => {
           placeholder="Выберите контрагента *"
           onChange={handleChange}
           required
-          error={wasSubmitted && !isAnyModalOpen ? validationErrors.counterparty : undefined}
+          error={
+            wasSubmitted && !isAnyModalOpen
+              ? validationErrors.counterparty
+              : undefined
+          }
           className="my-3.5 w-full text-sm text-black placeholder:text-gray-400"
         />
       ) : (
-        selectedOperation?.name !== "Перемещение" && (
+        selectedOperation?.name !== 'Перемещение' && (
           <SelectField
             name="wallet"
             value={formData.wallet}
@@ -379,10 +408,14 @@ const ReportForm: React.FC = () => {
             placeholder="Кошелёк *"
             onChange={handleChange}
             required={
-              selectedOperation?.name === "Приход" ||
-              selectedOperation?.name === "Расход"
+              selectedOperation?.name === 'Приход' ||
+              selectedOperation?.name === 'Расход'
             }
-            error={wasSubmitted && !isAnyModalOpen ? validationErrors.wallet : undefined}
+            error={
+              wasSubmitted && !isAnyModalOpen
+                ? validationErrors.wallet
+                : undefined
+            }
             className="my-3.5 w-full text-sm text-black"
           />
         )

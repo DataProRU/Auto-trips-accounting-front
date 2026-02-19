@@ -5,7 +5,8 @@ import type {
   Currency, 
   Company, 
   Counterparty,
-  InvoiceResponse
+  InvoiceResponse,
+  Client
 } from "../api";
 import type { FormData } from "../forms";
 
@@ -28,6 +29,20 @@ export interface ReportState {
 export interface InvoiceState {
   view: "contractors" | "expenses" | null;
   invoices: InvoiceResponse;
+  loading: boolean;
+  error: string | null;
+}
+
+// Companies State
+export interface CompaniesState {
+  companies: Company[];
+  loading: boolean;
+  error: string | null;
+}
+
+// Clients State
+export interface ClientsState {
+  clients: Client[];
   loading: boolean;
   error: string | null;
 }
@@ -59,6 +74,8 @@ export interface WalletSelectionState {
 export interface RootState {
   report: ReportState;
   invoice: InvoiceState;
+  companies: CompaniesState;
+  clients: ClientsState;
   auth: AuthState;
   walletSelection: WalletSelectionState;
 }

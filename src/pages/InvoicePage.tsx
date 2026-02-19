@@ -1,21 +1,22 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { Link } from "react-router-dom";
-import { setView, fetchInvoices } from "@/store/slices/invoiceSlice";
-import { setFormDataField } from "@/store/slices/reportSlice";
-import type { AppDispatch, RootState } from "@/store/store";
-import type { Invoice } from "@/types/api";
-import Header from "@/components/Header/Header";
-import InvoiceFilterButtons from "@/components/InvoiceFilterButtons/InvoiceFilterButtons";
-import InvoiceList from "@/components/InvoiceList/InvoiceList";
-import { Button } from "@/ui/button";
-import { formatInvoiceData } from "@/store/selectors/invoiceSelectors";
-import CounterpartyModal from "@/components/Modals/CounterpartyModal";
+import React, { useCallback, useEffect, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { Link } from 'react-router-dom';
+import { setView, fetchInvoices } from '@/store/slices/invoiceSlice';
+import { setFormDataField } from '@/store/slices/reportSlice';
+import type { AppDispatch, RootState } from '@/store/store';
+import type { Invoice } from '@/types/api';
+import Header from '@/components/Header/Header';
+import ReportInvoiceSwitcher from '@/components/ReportInvoiceSwitcher/ReportInvoiceSwitcher';
+import InvoiceFilterButtons from '@/components/InvoiceFilterButtons/InvoiceFilterButtons';
+import InvoiceList from '@/components/InvoiceList/InvoiceList';
+import { Button } from '@/ui/button';
+import { formatInvoiceData } from '@/store/selectors/invoiceSelectors';
+import CounterpartyModal from '@/components/Modals/CounterpartyModal';
 
 const InvoicePage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { view, invoices, loading, error } = useSelector(
-    (state: RootState) => state.invoice
+    (state: RootState) => state.invoice,
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
@@ -24,17 +25,17 @@ const InvoicePage: React.FC = () => {
     try {
       await dispatch(fetchInvoices()).unwrap();
     } catch (err) {
-      console.error("Ошибка обновления счетов:", err);
+      console.error('Ошибка обновления счетов:', err);
     }
   }, [dispatch]);
 
   useEffect(() => {
     const loadInvoices = async () => {
       try {
-        dispatch(setView({ view: "contractors" }));
+        dispatch(setView({ view: 'contractors' }));
         await refreshInvoices();
       } catch (err) {
-        console.error("Ошибка загрузки счетов:", err);
+        console.error('Ошибка загрузки счетов:', err);
       }
     };
     loadInvoices();
@@ -44,57 +45,64 @@ const InvoicePage: React.FC = () => {
     setSelectedInvoice(invoice);
     dispatch(
       setFormDataField({
-        name: "counterparty",
+        name: 'counterparty',
         value: String(invoice.counterparty.id),
-      })
+      }),
     );
     dispatch(
-      setFormDataField({ name: "amount", value: String(invoice.amount) })
-    );
-    dispatch(
-      setFormDataField({
-        name: "date",
-        value: new Date(invoice.date).toLocaleDateString("ru-RU"),
-      })
+      setFormDataField({ name: 'amount', value: String(invoice.amount) }),
     );
     dispatch(
       setFormDataField({
-        name: "status",
-        value: invoice.is_paid ? "Оплачен" : "Ожидает оплаты",
-      })
+        name: 'date',
+        value: new Date(invoice.date).toLocaleDateString('ru-RU'),
+      }),
     );
     dispatch(
       setFormDataField({
-        name: "company",
+        name: 'status',
+        value: invoice.is_paid ? 'Оплачен' : 'Ожидает оплаты',
+      }),
+    );
+    dispatch(
+      setFormDataField({
+        name: 'company',
         value: String(invoice.company.id),
-      })
+      }),
     );
-    dispatch(setFormDataField({ name: "date", value: invoice.date }));
-    dispatch(setFormDataField({ name: "date_finish", value: invoice.finish_date }));
+    dispatch(setFormDataField({ name: 'date', value: invoice.date }));
     dispatch(
-      setFormDataField({ name: "operation", value: String(invoice.operation_type.id) })
+      setFormDataField({ name: 'date_finish', value: invoice.finish_date }),
+    );
+    dispatch(
+      setFormDataField({
+        name: 'operation',
+        value: String(invoice.operation_type.id),
+      }),
     );
     setIsModalOpen(true);
   };
 
   const filteredInvoices = view
     ? invoices.items.filter((invoice: Invoice) =>
-        view === "contractors"
-          ? invoice.operation_type.name === "Выставить счёт" && !invoice.is_paid
-          : invoice.operation_type.name !== "Выставить счёт" && !invoice.is_paid
+        view === 'contractors'
+          ? invoice.operation_type.name === 'Выставить счёт' && !invoice.is_paid
+          : invoice.operation_type.name !== 'Выставить счёт' &&
+            !invoice.is_paid,
       )
     : [];
 
   const currentData = view ? formatInvoiceData(filteredInvoices) : null;
 
-  const handleCreateInvoice = () => dispatch(setView({ view: "contractors" }));
-  const handleViewContracts = () => dispatch(setView({ view: "expenses" }));
+  const handleCreateInvoice = () => dispatch(setView({ view: 'contractors' }));
+  const handleViewContracts = () => dispatch(setView({ view: 'expenses' }));
 
   return (
     <div className="min-h-screen bg-gray-100">
       <Header />
+      <ReportInvoiceSwitcher activeTab="invoice" />
       <div
-        style={{ minHeight: "80vh" }}
+        style={{ minHeight: '80vh' }}
         className="max-w-7xl mx-auto p-6 bg-white mt-6 rounded-[13px] shadow flex flex-col justify-between"
       >
         <div>
@@ -119,7 +127,7 @@ const InvoicePage: React.FC = () => {
         <div className="text-center w-full">
           <Link
             to={`/tg_bot_add?username=${
-              localStorage.getItem("username") || ""
+              localStorage.getItem('username') || ''
             }`}
           >
             <Button variant="active" size="default" className="w-full">
