@@ -47,7 +47,7 @@ export const selectCategoryArticles = (state: RootState) => state.report.categor
 export const selectOperationCategories = (state: RootState) => state.report.operationCategories;
 export const selectPaymentTypes = (state: RootState) => state.report.paymentTypes;
 export const selectCurrencies = (state: RootState) => state.report.currencies;
-export const selectCompanies = (state: RootState) => state.report.companies;
+export const selectReportCompanies = (state: RootState) => state.report.companies;
 export const selectCounterparties = (state: RootState) => state.report.counterparties;
 
 // Состояние UI
@@ -64,7 +64,7 @@ export const selectSelectedOperation = (state: RootState) => {
 
 export const selectSelectedCompany = (state: RootState) => {
   const formData = selectFormData(state);
-  const companies = selectCompanies(state);
+  const companies = selectReportCompanies(state);
   return companies.find(company => String(company.id) === formData.company);
 };
 
@@ -96,7 +96,7 @@ export const selectSelectedCounterparty = (state: RootState) => {
 export const selectIsFormValid = (state: RootState): boolean => {
   const formData = selectFormData(state);
   const operationTypes = selectOperationTypes(state);
-  
+
   // Базовые поля
   const basicFields = [
     formData.company,
@@ -116,16 +116,16 @@ export const selectIsFormValid = (state: RootState): boolean => {
   switch (selectedOperation.name) {
     case "Перемещение":
       return Boolean(formData.wallet_from) && Boolean(formData.wallet_to) &&
-             formData.wallet_from.trim() !== "" && formData.wallet_to.trim() !== "";
-    
+        formData.wallet_from.trim() !== "" && formData.wallet_to.trim() !== "";
+
     case "Выставить счёт":
     case "Выставить расход":
       return Boolean(formData.counterparty) && formData.counterparty.trim() !== "";
-    
+
     case "Приход":
     case "Расход":
       return Boolean(formData.wallet) && formData.wallet.trim() !== "";
-    
+
     default:
       return true;
   }
@@ -150,10 +150,10 @@ export const selectShowTransferForm = (state: RootState): boolean => {
 export const selectShowSuccessMessage = (state: RootState): boolean => {
   const success = selectSuccess(state);
   const selectedOperation = selectSelectedOperation(state);
-  
-  return success && 
-         selectedOperation?.name !== "Выставить счёт" && 
-         selectedOperation?.name !== "Выставить расход";
+
+  return success &&
+    selectedOperation?.name !== "Выставить счёт" &&
+    selectedOperation?.name !== "Выставить расход";
 };
 
 // Селекторы для опций форм
@@ -193,8 +193,8 @@ export const selectCurrencyOptions = (state: RootState) => {
   }));
 };
 
-export const selectCompanyOptions = (state: RootState) => {
-  const companies = selectCompanies(state);
+export const selectReportCompanyOptions = (state: RootState) => {
+  const companies = selectReportCompanies(state);
   return companies.map((c, index) => ({
     value: String(c.id),
     label: c.name,

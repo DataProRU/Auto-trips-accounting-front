@@ -1,8 +1,7 @@
-import * as React from "react";
-import { cn } from "@/lib/utils";
-import ErrorMessage from "@/ui/error-message";
+import * as React from 'react';
+import { cn } from '@/lib/utils';
 
-interface InputProps extends React.ComponentProps<"input"> {
+interface InputProps extends React.ComponentProps<'input'> {
   error?: string;
 }
 
@@ -13,15 +12,15 @@ function Input({ className, type, error, ...props }: InputProps) {
         type={type}
         data-slot="input"
         className={cn(
-          "rounded-[8px] border  bg-white p-2.5 text-sm text-black focus-visible:outline-none focus-visible:outline-2 focus-visible:shadow-none disabled:cursor-not-allowed disabled:opacity-50 appearance-none placeholder:text-gray-400 border-gray-200",
-          type === "number" &&
-            "[-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
-          error && "border-red-500",
-          className
+          'rounded-[8px] border  bg-white p-2.5 text-sm text-black focus-visible:outline-none focus-visible:outline-2 focus-visible:shadow-none disabled:cursor-not-allowed disabled:opacity-50 appearance-none placeholder:text-gray-400 border-gray-200',
+          type === 'number' &&
+            '[-moz-appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
+          error && 'border-red-500',
+          className,
         )}
         {...props}
       />
-      {error && <ErrorMessage />}
+      {error && <p className="text-red-500 text-sm">{error}</p>}
     </div>
   );
 }

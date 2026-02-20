@@ -4,13 +4,12 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/ui/select";
-import ErrorMessage from "@/ui/error-message"; // Import ErrorMessage component
+} from '@/ui/select';
 
 interface SelectOption {
   value: string;
   label: string;
-  key?: string; 
+  key?: string;
 }
 
 interface SelectFieldProps<T extends string = string> {
@@ -30,7 +29,7 @@ const SelectField = <T extends string = string>({
   options,
   placeholder,
   onChange,
-  className = "w-full text-sm truncate",
+  className = 'w-full text-sm truncate',
   error,
 }: SelectFieldProps<T>) => (
   <div className="w-full ">
@@ -41,7 +40,7 @@ const SelectField = <T extends string = string>({
       required={false}
     >
       <SelectTrigger
-        className={`${className} ${error ? "border-red-500" : ""}`}
+        className={`${className} ${error ? 'border-red-500' : ''}`}
       >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
@@ -57,7 +56,7 @@ const SelectField = <T extends string = string>({
         )}
       </SelectContent>
     </Select>
-    {error && <ErrorMessage />}
+    {error && <p className="text-red-500 text-sm">{error}</p>}
   </div>
 );
 

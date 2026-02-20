@@ -1,17 +1,17 @@
-import { useEffect } from "react";
-import { Route, Routes, useNavigate, useLocation } from "react-router-dom";
-import { useAppSelector, useAppDispatch } from "./hooks/hooks";
-import { logout, verifyToken, refreshToken } from "./store/slices/authSlice";
-import type { AppDispatch } from "./store/store";
+import { useEffect } from 'react';
+import { Route, Routes, useNavigate, useLocation } from 'react-router-dom';
+import { useAppSelector, useAppDispatch } from './hooks/hooks';
+import { logout, verifyToken, refreshToken } from './store/slices/authSlice';
+import type { AppDispatch } from './store/store';
 import {
   selectIsAuthenticated,
   selectUsername,
   selectAuthLoading,
   selectAuthStatus,
-} from "./store/selectors/authSelectors";
-import ReportFormPage from "./pages/ReportFormPage";
-import LoginPage from "./pages/LoginPage";
-import InvoicePage from "./pages/InvoicePage";
+} from './store/selectors/authSelectors';
+import ReportFormPage from './pages/ReportFormPage';
+import LoginPage from './pages/LoginPage';
+import ClientInvoicePage from './pages/ClientInvoicePage';
 
 function App() {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
@@ -24,7 +24,7 @@ function App() {
   const location = useLocation();
 
   const params = new URLSearchParams(location.search);
-  const url_name = params.get("username");
+  const url_name = params.get('username');
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -32,11 +32,11 @@ function App() {
         return;
       }
 
-      const storedToken = localStorage.getItem("access_token");
+      const storedToken = localStorage.getItem('access_token');
 
       if (!storedToken) {
         dispatch(logout());
-        navigate("/tg_bot_add", { replace: true });
+        navigate('/tg_bot_add', { replace: true });
         return;
       }
 
@@ -49,7 +49,7 @@ function App() {
         } catch (refreshError) {
           console.log(refreshError);
           dispatch(logout());
-          navigate("/tg_bot_add", { replace: true });
+          navigate('/tg_bot_add', { replace: true });
         }
       }
     };
@@ -57,7 +57,7 @@ function App() {
     initializeAuth();
   }, [dispatch, navigate, isAuthenticated]);
 
-  if (loading && authStatus === "loading") {
+  if (loading && authStatus === 'loading') {
     return (
       <div className="min-h-screen bg-[#f4f3e9] flex items-center justify-center">
         <div className="text-center">
@@ -76,7 +76,7 @@ function App() {
             path="/tg_bot_add"
             element={username === url_name ? <ReportFormPage /> : <LoginPage />}
           />
-          <Route path="/tg_bot_add/invoice" element={<InvoicePage />} />
+          <Route path="/tg_bot_add/invoice" element={<ClientInvoicePage />} />
         </>
       ) : (
         <Route path="*" element={<LoginPage />} />

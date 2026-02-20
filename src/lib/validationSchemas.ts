@@ -118,7 +118,7 @@ export const incomeExpenseSchema = (
 };
 
 // Функция для получения схемы валидации на основе типа операции
-export const getValidationSchema = (
+export const getReportValidationSchema = (
   formData: FormData,
   operation_types: OperationType[],
   wallets: Wallet[],
@@ -156,9 +156,30 @@ export const getValidationSchema = (
   }
 };
 
+export const InvoiceValidationSchema = z.object({
+  company: z.string().min(1, 'Компания обязательна'),
+  client: z.string().min(1, 'Клиент обязательный'),
+  date: z.string().min(1, 'Дата обязательна'),
+  amount: z.string().min(1, 'Сумма обязательна').refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+    message: 'Сумма должна быть положительным числом',
+  }),
+});
+
+export const ClientValidationSchema = z.object({
+  full_name: z.string().min(1, 'ФИО обязательно'),
+  phone: z.string().min(1, 'Телефон обязательный'),
+}).refine((data) => {
+  const phoneRegex = /^\+\d{1,4}\d{7,11}$/;
+  return phoneRegex.test(data.phone);
+}, {
+  message: 'Телефон должен быть в формате +XXXXXXXXXXXX',
+  path: ['phone'],
+});
+
 // Типы для валидации
 export type TransferFormData = z.infer<typeof transferSchema>;
 export type InvoiceFormData = z.infer<ReturnType<typeof invoiceSchema>>;
 export type IncomeExpenseFormData = z.infer<
   ReturnType<typeof incomeExpenseSchema>
 >;
+export type ClientInvoiceFormData = z.infer<typeof InvoiceValidationSchema>;

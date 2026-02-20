@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface ModalProps {
   isOpen: boolean;
@@ -12,9 +13,15 @@ const Modal: React.FC<ModalProps> = ({
   isOpen,
   onClose,
   children,
-  className = "",
+  className = '',
   backdropClickClose = true,
 }) => {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   if (!isOpen) return null;
 
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -23,16 +30,25 @@ const Modal: React.FC<ModalProps> = ({
     }
   };
 
-  return (
+  const content = (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/55"
       onClick={handleBackdropClick}
     >
-      <div className={`bg-white rounded-lg shadow-lg p-6 ${className}`}>
+      <div
+        className={`bg-white rounded-lg shadow-lg p-6 ${className}`}
+        onClick={(e) => e.stopPropagation()}
+      >
         {children}
       </div>
     </div>
   );
+
+  if (mounted && typeof document !== 'undefined') {
+    return createPortal(content, document.body);
+  }
+
+  return null;
 };
 
-export default Modal; 
+export default Modal;
