@@ -7,6 +7,8 @@ import companiesReducer from "./slices/companiesSlice";
 import clientsReducer from "./slices/clientsSlice";
 import authReducer from "./slices/authSlice";
 import walletSelectionReducer from "./slices/walletSelectionSlice";
+import productsReducer from "./slices/productsSlice";
+import clientInvoicesReducer from "./slices/clientInvoicesSlice";
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +16,8 @@ export const store = configureStore({
     invoice: invoiceReducer,
     companies: companiesReducer,
     clients: clientsReducer,
+    products: productsReducer,
+    clientInvoices: clientInvoicesReducer,
     auth: authReducer,
     walletSelection: walletSelectionReducer,
   },

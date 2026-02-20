@@ -25,6 +25,21 @@ export interface Client {
   phone: string;
 }
 
+export interface Product {
+  id: number;
+  name: string;
+}
+
+export interface ClientInvoice {
+  id: number;
+  company: number;
+  client: number;
+  product: number;
+  date: string;
+  amount: number;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface OperationType {
   id: number;

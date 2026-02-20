@@ -1,14 +1,14 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import $api from "@/setup/http/http";
-import type { Company } from "@/types";
+import type { Product } from "@/types";
 
-export const fetchCompanies = createAsyncThunk<
-    Company[],
+export const fetchProducts = createAsyncThunk<
+    Product[],
     void,
     { rejectValue: string }
->("companies/fetchCompanies", async (_, { rejectWithValue }) => {
+>("products/fetchProducts", async (_, { rejectWithValue }) => {
     try {
-        const response = await $api.get<Company[]>("/api/companies");
+        const response = await $api.get<Product[]>("/api/products");
         return response.data;
     } catch (error: unknown) {
         if (error instanceof Error && "response" in error) {

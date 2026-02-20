@@ -8,7 +8,7 @@ export const fetchClients = createAsyncThunk<
   { rejectValue: string }
 >("clients/fetchClients", async (_, { rejectWithValue }) => {
   try {
-    const response = await $api.get<Client[]>("/api/clients/");
+    const response = await $api.get<Client[]>("/api/clients");
     return response.data;
   } catch (error: unknown) {
     if (error instanceof Error && "response" in error) {
@@ -28,6 +28,6 @@ export const fetchClients = createAsyncThunk<
 export async function createClient(
   payload: Client
 ): Promise<Client> {
-  const response = await $api.post<Client>("/api/clients/", payload);
+  const response = await $api.post<Client>("/api/clients", payload);
   return response.data;
 }
