@@ -157,8 +157,9 @@ export const getReportValidationSchema = (
 };
 
 export const InvoiceValidationSchema = z.object({
-  company: z.string().min(1, 'Компания обязательна'),
-  client: z.string().min(1, 'Клиент обязательный'),
+  company_id: z.string().min(1, 'Компания обязательна'),
+  client_id: z.string().min(1, 'Клиент обязательный'),
+  product_id: z.string().min(1, 'Продукт обязательный'),
   date: z.string().min(1, 'Дата обязательна'),
   amount: z.string().min(1, 'Сумма обязательна').refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
     message: 'Сумма должна быть положительным числом',

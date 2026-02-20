@@ -1,12 +1,14 @@
-import type { 
-  OperationType, 
-  PaymentType, 
-  Wallet, 
-  Currency, 
-  Company, 
+import type {
+  OperationType,
+  PaymentType,
+  Wallet,
+  Currency,
+  Company,
   Counterparty,
   InvoiceResponse,
-  Client
+  Client,
+  Product,
+  ClientInvoice
 } from "../api";
 import type { FormData } from "../forms";
 
@@ -58,6 +60,21 @@ export interface AuthState {
   error: string | null;
 }
 
+// Products State
+export interface ProductsState {
+  products: Product[];
+  loading: boolean;
+  error: string | null;
+}
+
+// Client Invoices State
+export interface ClientInvoicesState {
+  clientInvoices: ClientInvoice[];
+  count: number;
+  loading: boolean;
+  error: string | null;
+}
+
 // Wallet Selection State
 export interface WalletSelectionState {
   isOpen: boolean;
@@ -76,6 +93,8 @@ export interface RootState {
   invoice: InvoiceState;
   companies: CompaniesState;
   clients: ClientsState;
+  products: ProductsState;
+  clientInvoices: ClientInvoicesState;
   auth: AuthState;
   walletSelection: WalletSelectionState;
 }
