@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 import Modal from '@/ui/Modal';
 import { Input } from '@/ui/input';
@@ -24,6 +24,17 @@ const AddClientModal: React.FC<AddClientModalProps> = ({
 }) => {
   const { showSuccess, showError } = useNotification();
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = overflow;
+    };
+  }, [isOpen]);
+
   const {
     register,
     handleSubmit,
@@ -47,10 +58,10 @@ const AddClientModal: React.FC<AddClientModalProps> = ({
         isAxiosError(err) && err.response?.data?.detail
           ? String(err.response.data.detail)
           : isAxiosError(err) && err.response?.data?.message
-            ? String(err.response.data.message)
-            : err instanceof Error
-              ? err.message
-              : 'Не удалось создать клиента';
+          ? String(err.response.data.message)
+          : err instanceof Error
+          ? err.message
+          : 'Не удалось создать клиента';
       showError(message);
     }
   };

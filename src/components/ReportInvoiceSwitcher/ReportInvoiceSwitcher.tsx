@@ -20,12 +20,12 @@ const ReportInvoiceSwitcher: React.FC<ReportInvoiceSwitcherProps> = ({
   const baseReportUrl = `/tg_bot_add?username=${username || ''}`;
 
   return (
-    <div className="flex max-w-7xl mx-auto px-4 pt-4 gap-8">
+    <div className="flex max-w-7xl mx-auto px-4 pt-4 gap-4">
       <Link
         to={baseReportUrl}
         className={cn(
           'no-underline pb-2 border-b-2 inline-block text-center min-w-[4rem]',
-          activeTab === 'report' ? activeStyles : inactiveStyles,
+          activeTab === 'report' ? activeStyles : inactiveStyles
         )}
       >
         Отчёт
@@ -34,7 +34,7 @@ const ReportInvoiceSwitcher: React.FC<ReportInvoiceSwitcherProps> = ({
         to="/tg_bot_add/invoice"
         className={cn(
           'no-underline pb-2 border-b-2 inline-block text-center min-w-[4rem]',
-          activeTab === 'invoice' ? activeStyles : inactiveStyles,
+          activeTab === 'invoice' ? activeStyles : inactiveStyles
         )}
       >
         Счёт

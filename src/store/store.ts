@@ -1,14 +1,15 @@
-import { configureStore } from "@reduxjs/toolkit";
-import type { RootState } from "@/types/store";
+import { configureStore } from '@reduxjs/toolkit';
+import type { RootState } from '@/types/store';
 
-import reportReducer from "./slices/reportSlice";
-import invoiceReducer from "./slices/invoiceSlice";
-import companiesReducer from "./slices/companiesSlice";
-import clientsReducer from "./slices/clientsSlice";
-import authReducer from "./slices/authSlice";
-import walletSelectionReducer from "./slices/walletSelectionSlice";
-import productsReducer from "./slices/productsSlice";
-import clientInvoicesReducer from "./slices/clientInvoicesSlice";
+import reportReducer from './slices/reportSlice';
+import invoiceReducer from './slices/invoiceSlice';
+import companiesReducer from './slices/companiesSlice';
+import clientsReducer from './slices/clientsSlice';
+import authReducer from './slices/authSlice';
+import walletSelectionReducer from './slices/walletSelectionSlice';
+import productsReducer from './slices/productsSlice';
+import clientInvoicesReducer from './slices/clientInvoicesSlice';
+import vinsReducer from './slices/vinsSlice';
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +19,7 @@ export const store = configureStore({
     clients: clientsReducer,
     products: productsReducer,
     clientInvoices: clientInvoicesReducer,
+    vins: vinsReducer,
     auth: authReducer,
     walletSelection: walletSelectionReducer,
   },
