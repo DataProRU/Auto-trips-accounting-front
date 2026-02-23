@@ -1,6 +1,7 @@
-import { createSlice } from "@reduxjs/toolkit";
-import type { Company } from "@/types/api";
-import { fetchCompanies } from "@/services/companyService";
+import { createSelector, createSlice } from '@reduxjs/toolkit';
+import type { Company } from '@/types/api';
+import { fetchCompanies } from '@/services/companyService';
+import type { RootState } from '@/store/store';
 
 export interface CompaniesState {
   companies: Company[];
@@ -15,7 +16,7 @@ const initialState: CompaniesState = {
 };
 
 const companiesSlice = createSlice({
-  name: "companies",
+  name: 'companies',
   initialState,
   reducers: {},
   extraReducers: (builder) => {
@@ -37,3 +38,18 @@ const companiesSlice = createSlice({
 });
 
 export default companiesSlice.reducer;
+
+export const selectCompanies = (state: RootState) => state.companies.companies;
+export const selectCompaniesLoading = (state: RootState) =>
+  state.companies.loading;
+export const selectCompaniesError = (state: RootState) => state.companies.error;
+
+export const selectCompanyOptions = createSelector(
+  [selectCompanies],
+  (companies) =>
+    companies.map((c, i) => ({
+      value: String(c.id),
+      label: c.name,
+      key: `company-${c.id}-${i}`,
+    }))
+);

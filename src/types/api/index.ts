@@ -119,10 +119,32 @@ export interface ISubmitPayload {
 export interface IClientInvoiceSubmitPayload {
   username: string;
   company_id: number;
-  client_id: number
+  client_id: number;
 }
 
 export interface InvoiceResponse {
   items: Invoice[];
   total: number;
+}
+
+export interface VinNumber {
+  id?: number;
+  vin: string;
+  car_model: string;
+}
+
+export interface EstimateItem {
+  vin_id: number;
+  port: number;
+  terminal: number;
+  loader_terminal: number;
+  car_pickup: number;
+  reexport: number;
+  parking: number;
+  broker: number;
+  delivery: number;
+  security: number;
+  loader_parking: number;
+  extra_services: number;
+  extra_services_comment: string;
 }

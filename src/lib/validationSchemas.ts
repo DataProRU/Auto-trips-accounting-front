@@ -156,6 +156,22 @@ export const getReportValidationSchema = (
   }
 };
 
+export const EstimateItemSchema = z.object({
+  vin_id: z.number().min(1, 'VIN обязателен'),
+  port: z.number().min(0),
+  terminal: z.number().min(0),
+  loader_terminal: z.number().min(0),
+  car_pickup: z.number().min(0),
+  reexport: z.number().min(0),
+  parking: z.number().min(0),
+  broker: z.number().min(0),
+  delivery: z.number().min(0),
+  security: z.number().min(0),
+  loader_parking: z.number().min(0),
+  extra_services: z.number().min(0),
+  extra_services_comment: z.string(),
+});
+
 export const InvoiceValidationSchema = z.object({
   company_id: z.string().min(1, 'Компания обязательна'),
   client_id: z.string().min(1, 'Клиент обязательный'),
@@ -164,6 +180,7 @@ export const InvoiceValidationSchema = z.object({
   amount: z.string().min(1, 'Сумма обязательна').refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
     message: 'Сумма должна быть положительным числом',
   }),
+  estimates: z.array(EstimateItemSchema).optional(),
 });
 
 export const ClientValidationSchema = z.object({
@@ -177,6 +194,11 @@ export const ClientValidationSchema = z.object({
   path: ['phone'],
 });
 
+export const VinValidationSchema = z.object({
+  vin: z.string().min(1, 'VIN обязательный'),
+  car_model: z.string().min(1, 'Модель автомобиля обязательна'),
+});
+
 // Типы для валидации
 export type TransferFormData = z.infer<typeof transferSchema>;
 export type InvoiceFormData = z.infer<ReturnType<typeof invoiceSchema>>;
@@ -184,3 +206,4 @@ export type IncomeExpenseFormData = z.infer<
   ReturnType<typeof incomeExpenseSchema>
 >;
 export type ClientInvoiceFormData = z.infer<typeof InvoiceValidationSchema>;
+export type VinFormData = z.infer<typeof VinValidationSchema>;

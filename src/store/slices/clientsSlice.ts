@@ -1,6 +1,11 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type { Client } from "@/types/api";
-import { fetchClients } from "@/services/clientService";
+import {
+  createSelector,
+  createSlice,
+  type PayloadAction,
+} from '@reduxjs/toolkit';
+import type { Client } from '@/types/api';
+import { fetchClients } from '@/services/clientService';
+import type { RootState } from '@/types/store';
 
 export interface ClientsState {
   clients: Client[];
@@ -15,14 +20,12 @@ const initialState: ClientsState = {
 };
 
 const clientsSlice = createSlice({
-  name: "clients",
+  name: 'clients',
   initialState,
   reducers: {
     addClient: (state, action: PayloadAction<Client>) => {
       const client = action.payload;
-      if (client.id != null && !state.clients.some((c) => c.id === client.id)) {
-        state.clients.push(client);
-      } else if (client.id == null) {
+      if (!state.clients.some((c) => c.id === client.id)) {
         state.clients.push(client);
       }
     },
@@ -46,4 +49,16 @@ const clientsSlice = createSlice({
 });
 
 export const { addClient } = clientsSlice.actions;
+
 export default clientsSlice.reducer;
+export const selectClients = (state: RootState) => state.clients.clients;
+export const selectClientsLoading = (state: RootState) => state.clients.loading;
+export const selectClientsError = (state: RootState) => state.clients.error;
+
+export const selectClientOptions = createSelector([selectClients], (clients) =>
+  clients.map((c, i) => ({
+    value: String(c.id ?? i),
+    label: c.full_name,
+    key: `client-${c.id ?? i}-${i}`,
+  }))
+);

@@ -8,9 +8,10 @@ import type {
   InvoiceResponse,
   Client,
   Product,
-  ClientInvoice
-} from "../api";
-import type { FormData } from "../forms";
+  ClientInvoice,
+  VinNumber,
+} from '../api';
+import type { FormData } from '../forms';
 
 export interface ReportState {
   formData: FormData;
@@ -29,7 +30,7 @@ export interface ReportState {
 
 // Invoice State
 export interface InvoiceState {
-  view: "contractors" | "expenses" | null;
+  view: 'contractors' | 'expenses' | null;
   invoices: InvoiceResponse;
   loading: boolean;
   error: string | null;
@@ -75,6 +76,13 @@ export interface ClientInvoicesState {
   error: string | null;
 }
 
+// Vins State
+export interface VinsState {
+  vins: VinNumber[];
+  loading: boolean;
+  error: string | null;
+}
+
 // Wallet Selection State
 export interface WalletSelectionState {
   isOpen: boolean;
@@ -95,9 +103,10 @@ export interface RootState {
   clients: ClientsState;
   products: ProductsState;
   clientInvoices: ClientInvoicesState;
+  vins: VinsState;
   auth: AuthState;
   walletSelection: WalletSelectionState;
 }
 
 // Re-export FormData for convenience
-export type { FormData } from "../forms"; 
+export type { FormData } from '../forms';
