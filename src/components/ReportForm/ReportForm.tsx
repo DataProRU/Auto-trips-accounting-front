@@ -291,6 +291,7 @@ const ReportForm: React.FC = () => {
       />
       <div className="relative mb-3.5">
         <DatePicker
+          label="Дата назначения"
           value={formData.date ? new Date(formData.date) : undefined}
           onChange={handleDateChange}
           className={

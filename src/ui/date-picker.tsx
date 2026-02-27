@@ -23,6 +23,7 @@ interface DatePickerProps {
   value?: Date;
   onChange?: (date: Date | undefined) => void;
   disabled?: boolean;
+  label:string;
 }
 
 export function DatePicker({
@@ -34,6 +35,7 @@ export function DatePicker({
   value,
   onChange,
   disabled = false,
+  label,
 }: DatePickerProps) {
   const [date, setDate] = React.useState<Date | undefined>(
     value || (disabled ? new Date() : undefined)
@@ -103,7 +105,7 @@ export function DatePicker({
           {date ? (
             format(date, "PPP", { locale: ru })
           ) : (
-            <span className="text-gray-400">Дата назначения</span>
+              <span className="text-gray-400">{label}</span>
           )}
           <CalendarIcon className="ml-auto h-4 w-4 text-gray-900" />
         </Button>
@@ -122,7 +124,7 @@ export function DatePicker({
               {date ? (
                 format(date, "PPP", { locale: ru })
               ) : (
-                <span className="text-gray-400">Дата назначения</span>
+                <span className="text-gray-400">{label}</span>
               )}
               <CalendarIcon className="ml-auto h-4 w-4 text-gray-900" />
             </Button>

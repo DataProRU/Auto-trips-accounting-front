@@ -3,7 +3,7 @@ import { useAppDispatch, useAppSelector } from '@/hooks/hooks';
 import ReportInvoiceSwitcher from '../ReportInvoiceSwitcher/ReportInvoiceSwitcher';
 import { selectProductOptions } from '@/store/selectors';
 import { addClient } from '@/store/slices/clientsSlice';
-import SelectField from '@/ui/select-field';
+import SearchableSelectField from '@/ui/searchable-select-field';
 import {
   InvoiceValidationSchema,
   type ClientInvoiceFormData,
@@ -29,8 +29,10 @@ import { isAxiosError } from 'axios';
 import { selectCompanyOptions } from '@/store/slices/companiesSlice';
 import { selectClientOptions } from '@/store/slices/clientsSlice';
 import { selectNextInvoiceNumber } from '@/store/slices/clientInvoicesSlice';
+import Loader from '@/ui/loader';
 
 const ClientInvoiceForm: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(false);
   const dispatch = useAppDispatch();
   const { showSuccess, showError } = useNotification();
 
@@ -84,6 +86,7 @@ const ClientInvoiceForm: React.FC = () => {
       return;
     }
     try {
+      setIsLoading(true)
       const payload = { ...data, estimates };
       console.log(payload);
       await dispatch(saveClientInvoice(payload)).unwrap();
@@ -97,6 +100,7 @@ const ClientInvoiceForm: React.FC = () => {
         amount: '',
         estimates: [],
       });
+      setIsLoading(false)
     } catch (err) {
       const message =
         isAxiosError(err) && err.response?.data?.detail
@@ -107,6 +111,7 @@ const ClientInvoiceForm: React.FC = () => {
           ? err.message
           : 'Не удалось сохранить счет клиента';
       showError(message);
+      setIsLoading(false)
     }
   };
 
@@ -127,12 +132,12 @@ const ClientInvoiceForm: React.FC = () => {
         name="company_id"
         control={control}
         render={({ field }) => (
-          <SelectField
+          <SearchableSelectField
             name="company_id"
             value={field.value}
             options={companyOptions}
             placeholder="Компания *"
-            onChange={(_name, value) => field.onChange(value)}
+            onChange={(_name: string, value: string) => field.onChange(value)}
             required
             error={errors.company_id?.message ?? undefined}
             className="mb-3.5 w-full text-sm text-black placeholder:text-gray-400"
@@ -145,15 +150,15 @@ const ClientInvoiceForm: React.FC = () => {
         render={({ field }) => (
           <div className="flex gap-2 items-stretch mb-3.5">
             <div className="flex-1 min-w-0">
-              <SelectField
+              <SearchableSelectField
                 name="client_id"
                 value={field.value}
                 options={clientOptions}
                 placeholder="Клиент *"
-                onChange={(_name, value) => field.onChange(value)}
+                onChange={(_name: string, value: string) => field.onChange(value)}
                 required
                 error={errors.client_id?.message ?? undefined}
-                className="w-full text-sm text-black placeholder:text-gray-400 h-full"
+                className="w-full text-sm text-black placeholder:text-gray-400"
               />
             </div>
             <Button
@@ -174,12 +179,12 @@ const ClientInvoiceForm: React.FC = () => {
         name="product_id"
         control={control}
         render={({ field }) => (
-          <SelectField
+          <SearchableSelectField
             name="product_id"
             value={field.value}
             options={productOptions}
             placeholder="Продукт *"
-            onChange={(_name, value) => field.onChange(value)}
+            onChange={(_name: string, value: string) => field.onChange(value)}
             required
             error={errors.product_id?.message ?? undefined}
             className="mb-3.5 w-full text-sm text-black placeholder:text-gray-400"
@@ -194,6 +199,7 @@ const ClientInvoiceForm: React.FC = () => {
           <div className="relative mb-3.5 flex flex-wrap items-center gap-4">
             <div className="flex-1 min-w-[140px]">
               <DatePicker
+                label="Дата счета"
                 value={field.value ? new Date(field.value) : undefined}
                 onChange={(date) =>
                   field.onChange(date ? date.toISOString().split('T')[0] : '')
@@ -238,10 +244,10 @@ const ClientInvoiceForm: React.FC = () => {
       </Button>
       <Button
         type="submit"
-        disabled={estimates.length === 0}
+        disabled={estimates.length === 0 || isLoading === true}
         className="mb-3.5 w-full bg-[#25fcf1] hover:bg-[#25fcf1aa] text-black font-light p-5 rounded-[8px] text-sm sm:text-base disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        Отправить
+        {isLoading ? 'Отправка...' : 'Отправить'}
       </Button>
       <EstimateModal
         isOpen={isEstimateModalOpen}
@@ -254,6 +260,7 @@ const ClientInvoiceForm: React.FC = () => {
         onClose={() => setIsAddClientModalOpen(false)}
         onSuccess={handleAddClientSuccess}
       />
+      {isLoading && <Loader />}
     </form>
   );
 };

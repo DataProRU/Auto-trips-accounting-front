@@ -3,12 +3,12 @@ import { X, Plus, Trash2 } from 'lucide-react';
 import Modal from '@/ui/Modal';
 import { Input } from '@/ui/input';
 import { Button } from '@/ui/button';
-import SelectField from '@/ui/select-field';
 import { useAppDispatch, useAppSelector } from '@/hooks/hooks';
 import { selectVinOptions, selectVins } from '@/store/slices/vinsSlice';
 import { fetchVins } from '@/services/vinService';
 import type { EstimateItem } from '@/types/api';
 import { AddNewVIn } from './AddNewVIn';
+import SearchableSelectField from '@/ui/searchable-select-field';
 
 interface EstimateModalProps {
   isOpen: boolean;
@@ -105,6 +105,7 @@ const EstimateModal: React.FC<EstimateModalProps> = ({
 
   const [blocks, setBlocks] = useState<EstimateBlock[]>([emptyBlock()]);
   const [showNewVin, setShowNewVin] = useState<Record<number, boolean>>({});
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -115,6 +116,7 @@ const EstimateModal: React.FC<EstimateModalProps> = ({
           : [emptyBlock()]
       );
       setShowNewVin({});
+      setShowPreview(false);
     }
   }, [isOpen, dispatch, initialEstimates]);
 
@@ -163,6 +165,15 @@ const EstimateModal: React.FC<EstimateModalProps> = ({
     return found ? found.car_model : null;
   };
 
+  const getVinString = (vinId: number): string =>
+    vins.find((v) => v.id === vinId)?.vin ?? '—';
+
+  const validBlocks = blocks.filter((b) => b.vin_id > 0);
+  const grandTotal = validBlocks.reduce(
+    (sum, b) => sum + calcTotal(b.expenses),
+    0
+  );
+
   const getVinOptionsForBlock = (blockIdx: number) => {
     const usedByOtherBlocks = blocks
       .filter((_, i) => i !== blockIdx)
@@ -175,12 +186,68 @@ const EstimateModal: React.FC<EstimateModalProps> = ({
   };
 
   const handleSave = () => {
-    const validBlocks = blocks.filter((b) => b.vin_id > 0);
     onSave(validBlocks.map(blockToEstimate));
     onClose();
   };
 
   if (!isOpen) return null;
+
+  if (showPreview) {
+    return (
+      <Modal
+        isOpen={isOpen}
+        onClose={() => setShowPreview(false)}
+        className="max-w-[95vw] w-[600px] max-h-[90vh] overflow-y-auto"
+      >
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Смета</h3>
+            <button
+              type="button"
+              onClick={() => setShowPreview(false)}
+              className="p-1 rounded hover:bg-gray-100"
+              aria-label="Закрыть"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="border border-gray-200 rounded-lg p-4">
+            <h4 className="text-base font-medium text-pink-500 mb-4">
+              Только просмотр
+            </h4>
+            <ol className="list-decimal list-inside space-y-2 mb-4">
+              {validBlocks.map((block, i) => (
+                <li
+                  key={i}
+                  className="flex justify-between gap-4 text-sm"
+                >
+                  <span>{getVinString(block.vin_id)}</span>
+                  <span className="font-semibold shrink-0">
+                    {calcTotal(block.expenses)} $
+                  </span>
+                </li>
+              ))}
+            </ol>
+            <div className="pt-2 border-t border-gray-200 flex justify-between items-center">
+              <span className="text-sm font-semibold">Итого:</span>
+              <span className="text-sm font-semibold">{grandTotal} $</span>
+            </div>
+          </div>
+
+          <div className="flex justify-end mt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowPreview(false)}
+            >
+              Редактировать
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    );
+  }
 
   return (
     <Modal
@@ -220,12 +287,12 @@ const EstimateModal: React.FC<EstimateModalProps> = ({
 
               <div className="flex gap-2 items-stretch mb-2">
                 <div className="flex-1 min-w-0">
-                  <SelectField
+                <SearchableSelectField
                     name={`vin-${blockIdx}`}
                     value={block.vin_id ? String(block.vin_id) : ''}
                     options={getVinOptionsForBlock(blockIdx)}
                     placeholder="VIN *"
-                    onChange={(_name, value) =>
+                    onChange={(_name: string, value: string) =>
                       updateBlock(blockIdx, { vin_id: Number(value) })
                     }
                     className="w-full text-sm text-black placeholder:text-gray-400"
@@ -266,10 +333,12 @@ const EstimateModal: React.FC<EstimateModalProps> = ({
               )}
 
               <p className="text-sm font-semibold mb-2">Расходные статьи</p>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 items-end">
                 {EXPENSE_FIELDS.map(({ key, label }) => (
-                  <div key={key}>
-                    <label className="text-xs text-gray-500">{label}</label>
+                  <div key={key} className="flex flex-col">
+                    <label className="text-xs text-gray-500 min-h-[2rem] flex items-end pb-1">
+                      {label}
+                    </label>
                     <Input
                       type="number"
                       value={block.expenses[key] || ''}
@@ -287,9 +356,11 @@ const EstimateModal: React.FC<EstimateModalProps> = ({
                 ))}
               </div>
 
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-2">
-                <div>
-                  <label className="text-xs text-gray-500">Доп услуги</label>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-2 items-end">
+                <div className="flex flex-col">
+                  <label className="text-xs text-gray-500 min-h-[2rem] flex items-end pb-1">
+                    Доп услуги
+                  </label>
                   <Input
                     type="number"
                     value={block.expenses.extra_services || ''}
@@ -304,8 +375,8 @@ const EstimateModal: React.FC<EstimateModalProps> = ({
                     className="text-sm"
                   />
                 </div>
-                <div>
-                  <label className="text-xs text-gray-500">
+                <div className="flex flex-col">
+                  <label className="text-xs text-gray-500 min-h-[2rem] flex items-end pb-1">
                     Комментарий к доп услуге
                   </label>
                   <Input
@@ -344,13 +415,20 @@ const EstimateModal: React.FC<EstimateModalProps> = ({
           </Button>
         </div>
 
-        <div className="flex gap-2 justify-end mt-4">
+        <div className="flex gap-2 justify-center mt-4 flex-wrap">
           <Button
             type="button"
             className="bg-[#25fcf1] hover:bg-[#25fcf1aa] text-black font-light px-6 py-2 rounded-[8px]"
             onClick={handleSave}
           >
             Сохранить
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowPreview(true)}
+          >
+            Предпросмотр
           </Button>
           <Button type="button" variant="outline" onClick={onClose}>
             Назад

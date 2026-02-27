@@ -90,6 +90,7 @@ const NoneTransferForm: React.FC<NoneTransferFormProps> = ({
       </div>
       <div className="date-wrapper mb-3.5">
         <DatePicker
+          label="Дата назначения"
           value={
             formData.date_finish ? new Date(formData.date_finish) : undefined
           }
