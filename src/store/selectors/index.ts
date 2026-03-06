@@ -1,5 +1,30 @@
-// Экспорт всех селекторов
-export * from './reportSelectors';
+export {
+  getSelectedOperation,
+  selectFormData,
+  selectOperationTypes,
+  selectWallets,
+  selectUsers,
+  selectCategoryArticles,
+  selectOperationCategories,
+  selectReportCompanies,
+  selectCounterparties,
+  selectLoading,
+  selectSuccess,
+  selectError,
+  selectSelectedOperation,
+  selectSelectedCompany,
+  selectSelectedWallet,
+  selectSelectedCounterparty,
+  selectIsFormValid,
+  selectShowWalletField,
+  selectShowTransferForm,
+  selectShowSuccessMessage,
+  selectOperationOptions,
+  selectReportWalletOptions,
+  selectUserOptions,
+  selectReportCompanyOptions,
+  selectCounterpartyOptions,
+} from '../slices/reportSlice';
 export * from './walletSelectionSelectors';
 export * from './authSelectors';
 export * from './productsSelectors';
