@@ -21,6 +21,7 @@ interface SelectFieldProps<T extends string = string> {
   required?: boolean;
   className?: string;
   error?: string;
+  disabled?: boolean;
 }
 
 const SelectField = <T extends string = string>({
@@ -31,6 +32,7 @@ const SelectField = <T extends string = string>({
   onChange,
   className = 'w-full text-sm truncate',
   error,
+  disabled = false,
 }: SelectFieldProps<T>) => (
   <div className="w-full ">
     <Select
@@ -38,6 +40,7 @@ const SelectField = <T extends string = string>({
       value={value}
       onValueChange={(value) => onChange(name, value)}
       required={false}
+      disabled={disabled}
     >
       <SelectTrigger
         className={`${className} ${error ? 'border-red-500' : ''}`}

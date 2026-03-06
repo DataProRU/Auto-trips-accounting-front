@@ -1,8 +1,6 @@
 import type {
   OperationType,
-  PaymentType,
   Wallet,
-  Currency,
   Company,
   Counterparty,
   InvoiceResponse,
@@ -17,10 +15,9 @@ export interface ReportState {
   formData: FormData;
   operation_types: OperationType[];
   wallets: Wallet[];
+  users: { id: number; username: string }[];
   categoryArticles: Record<string, string[]>;
   operationCategories: Record<string, string[]>;
-  paymentTypes: PaymentType[];
-  currencies: Currency[];
   companies: Company[];
   counterparties: Counterparty[];
   loading: boolean;

@@ -2,17 +2,20 @@
 export interface FormData {
   status: string;
   company: string;
+  client_id: string;
+  product_id: string;
+  invoice_id: string;
+  deal_number: string;
   date: string;
   operation: string;
   wallet_from: string;
   wallet_to: string;
+  user_id: string;
   category: string;
   article: string;
   date_finish: string;
   amount: string;
-  payment_type: string;
   comment: string;
-  currency: string;
   wallet: string;
   username: string;
   counterparty: string;
@@ -27,4 +30,4 @@ export interface ValidationError {
 export interface FormValidationResult {
   isValid: boolean;
   errors: ValidationError[];
-} 
+}

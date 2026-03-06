@@ -39,6 +39,7 @@ export interface ClientInvoice {
   amount: number;
   created_at: string;
   updated_at: string;
+  deal_number?: string | number;
 }
 
 export interface OperationType {
@@ -56,6 +57,9 @@ export interface Wallet {
   name: string;
   user_id: number;
   username: string;
+  currency_id?: number;
+  currency_code?: string;
+  currency_symbol?: string;
 }
 
 export interface Currency {
@@ -88,6 +92,11 @@ export interface Invoice {
   comment: string;
 }
 
+export interface User {
+  id: number;
+  username: string;
+}
+
 // API Response Interfaces
 export interface IInitialDataResponse {
   companies: Company[];
@@ -96,24 +105,25 @@ export interface IInitialDataResponse {
   wallets: Wallet[];
   currencies: Currency[];
   counterparties: Counterparty[];
+  users?: User[];
 }
 
 export interface ISubmitPayload {
-  username: string;
-  company_id: number;
   operation_type_id: number;
+  company_id: number;
+  client_id: number;
+  client_invoice_id: number;
+  username: string;
   date: string;
   amount: number;
-  category_id: number | null;
-  article_id: number | null;
+  article_id: number;
   finish_date: string;
-  payment_type_id: number;
   comment: string;
   wallet_id: number;
   wallet_from_id: number;
   wallet_to_id: number;
-  counterparty_id: number;
-  currency_id: number | null;
+  product_id: number;
+  money_holder_id: number;
 }
 
 export interface IClientInvoiceSubmitPayload {

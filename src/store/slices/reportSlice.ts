@@ -1,58 +1,56 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import type { RootState } from "@/store/store";
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import type { RootState } from '@/store/store';
 
-import type { 
-  ReportState, 
-  FormData
-} from "@/types/store";
-import type { 
-  IInitialDataResponse, 
+import type { ReportState, FormData } from '@/types/store';
+import type {
+  IInitialDataResponse,
   ISubmitPayload,
   OperationType,
   Company,
-  Currency
-} from "@/types/api";
+} from '@/types/api';
 import type {
   SetFormFieldPayload,
   SetLoadingPayload,
-  SetSuccessPayload
-} from "@/types/actions";
+  SetSuccessPayload,
+} from '@/types/actions';
 
-import { fetchInitialData, submitForm } from "../../services/reportService";
+import { fetchInitialData, submitForm } from '../../services/reportService';
 
 const initialFormData: FormData = {
-  username: "",
-  date: new Date().toISOString().split("T")[0],
-  operation: "",
-  category: "",
-  article: "",
-  date_finish: "",
-  amount: "",
-  currency: "",
-  payment_type: "",
-  comment: "",
-  wallet_from: "",
-  wallet_to: "",
-  wallet: "",
-  company: "",
-  counterparty: "",
-  status: "",
+  username: '',
+  date: new Date().toISOString().split('T')[0],
+  operation: '',
+  client_id: '',
+  product_id: '',
+  invoice_id: '',
+  deal_number: '',
+  category: '',
+  article: '',
+  date_finish: new Date().toISOString().split('T')[0],
+  amount: '',
+  comment: '',
+  wallet_from: '',
+  wallet_to: '',
+  user_id: '',
+  wallet: '',
+  company: '',
+  counterparty: '',
+  status: '',
 };
 
 const initialState: ReportState = {
   formData: initialFormData,
-  operation_types: [], 
+  operation_types: [],
   wallets: [],
+  users: [],
   categoryArticles: {},
   operationCategories: {},
-  paymentTypes: [],
-  currencies: [],
   companies: [],
   counterparties: [],
   loading: false,
   success: false,
   error: null,
-  };
+};
 
 // Функция для парсинга данных из API ответа
 const parseInitialData = (data: IInitialDataResponse) => {
@@ -106,121 +104,90 @@ const parseInitialData = (data: IInitialDataResponse) => {
     );
   });
 
+  const users: { id: number; username: string }[] = data.users ?? [];
+
   return {
     operation_types: data.operation_types,
     companies,
     counterparties,
+    users,
     wallets: data.wallets.map((w) => ({
       id: w.id,
       name: w.name,
       user_id: w.user_id || 0,
-      username: w.username || "",
+      username: w.username || '',
+      currency_id: (w as { currency_id?: number }).currency_id,
+      currency_code: (w as { currency_code?: string }).currency_code,
+      currency_symbol: (w as { currency_symbol?: string }).currency_symbol,
     })),
     categoryArticles,
     operationCategories,
-    paymentTypes: data.payment_types.map((pt) => ({
-      id: pt.id,
-      name: pt.name,
-    })),
-    currencies: data.currencies.map((c) => ({
-      id: c.id,
-      code: c.code,
-      name: c.name,
-      symbol: c.symbol,
-    })),
   };
 };
 
-// Функция для создания payload из данных формы
+// Функция для создания payload из данных формы (поля по контракту бэкенда)
 export const createSubmitPayload = (
   formData: FormData,
   operation_types: OperationType[],
   companies: Company[],
-  currencies: Currency[],
   state?: RootState
 ): ISubmitPayload => {
   const operation = operation_types.find(
     (op) => op.id === Number(formData.operation)
   );
-  
-  let categoryId: number | null = null;
-  let articleId: number | null = null;
-  
-  if (formData.category && formData.article) {
-    for (const company of companies) {
+  const isTransfer = operation?.name === 'Перемещение';
+
+  let articleId = 0;
+  if (!isTransfer && formData.category && formData.article) {
+    const company = companies.find((c) => String(c.id) === formData.company);
+    if (company) {
       const category = company.categories.find(
         (cat) => cat.name === formData.category
       );
       if (category) {
-        categoryId = category.id;
         const article = category.articles.find(
           (art) => art.title === formData.article
         );
-        if (article) {
-          articleId = article.id;
-        }
-        break;
+        if (article) articleId = article.id;
       }
     }
   }
 
-  const currency = currencies.find((cur) => cur.code === formData.currency);
-  const currencyId = currency ? currency.id : null;
-
-  const counterpartyId = formData.counterparty
-    ? Number(formData.counterparty)
-    : 0;
-
-  const isTransfer = operation?.name === "Перемещение";
-
-  const username = state?.auth.user?.username || localStorage.getItem("username") || "";
+  const username =
+    state?.auth.user?.username || localStorage.getItem('username') || '';
 
   return {
-    username,
-    company_id: formData.company ? Number(formData.company) : 0,
     operation_type_id: formData.operation ? Number(formData.operation) : 0,
-    date: formData.date || "",
+    company_id: formData.company ? Number(formData.company) : 0,
+    client_id: formData.client_id ? Number(formData.client_id) : 0,
+    client_invoice_id: formData.invoice_id ? Number(formData.invoice_id) : 0,
+    username,
+    date: isTransfer ? formData.date || '' : '',
     amount: parseFloat(formData.amount) || 0,
-    category_id: isTransfer ? null : categoryId,
-    article_id: isTransfer ? null : articleId,
-    finish_date: isTransfer ? "" : formData.date_finish || "",
-    payment_type_id: formData.payment_type
-      ? Number(formData.payment_type)
-      : 0,
-    comment: formData.comment || "",
+    article_id: articleId,
+    finish_date: isTransfer ? '' : formData.date_finish || '',
+    comment: formData.comment || '',
     wallet_id: formData.wallet ? Number(formData.wallet) : 0,
     wallet_from_id: formData.wallet_from ? Number(formData.wallet_from) : 0,
     wallet_to_id: formData.wallet_to ? Number(formData.wallet_to) : 0,
-    counterparty_id: counterpartyId,
-    currency_id: currencyId,
+    product_id: formData.product_id ? Number(formData.product_id) : 0,
+    money_holder_id: formData.user_id ? Number(formData.user_id) : 0,
   };
 };
 
 // Функция для валидации payload
-export const validateSubmitPayload = (payload: ISubmitPayload, operation?: OperationType): string | null => {
-  if (!payload.currency_id) {
-    return "currency_id обязателен и должен быть числом";
-  }
-
-  if (
-    (operation?.name === "Выставить счёт" ||
-      operation?.name === "Выставить расход") &&
-    !payload.counterparty_id
-  ) {
-    return "counterparty_id обязателен для операций 'Выставить счёт' и 'Выставить расход'";
-  }
-
+export const validateSubmitPayload = (
+  payload: ISubmitPayload
+): string | null => {
+  if (payload.amount <= 0) return 'Сумма должна быть больше нуля';
   return null;
 };
 
 const reportSlice = createSlice({
-  name: "report",
+  name: 'report',
   initialState,
   reducers: {
-    setFormDataField: (
-      state,
-      action: PayloadAction<SetFormFieldPayload>
-    ) => {
+    setFormDataField: (state, action: PayloadAction<SetFormFieldPayload>) => {
       const { name, value } = action.payload;
       state.formData[name] = value;
     },
@@ -228,13 +195,13 @@ const reportSlice = createSlice({
       state.formData = { ...initialFormData };
     },
     resetAccountingFields: (state) => {
-      state.formData.category = "";
-      state.formData.article = "";
-      state.formData.wallet_from = "";
-      state.formData.wallet_to = "";
+      state.formData.category = '';
+      state.formData.article = '';
+      state.formData.wallet_from = '';
+      state.formData.wallet_to = '';
     },
     resetAccountType: (state) => {
-      state.formData.article = "";
+      state.formData.article = '';
     },
     setLoading: (state, action: PayloadAction<SetLoadingPayload>) => {
       state.loading = action.payload.loading;
@@ -260,10 +227,9 @@ const reportSlice = createSlice({
         const parsedData = parseInitialData(action.payload);
         state.operation_types = parsedData.operation_types;
         state.wallets = parsedData.wallets;
+        state.users = parsedData.users;
         state.categoryArticles = parsedData.categoryArticles;
         state.operationCategories = parsedData.operationCategories;
-        state.paymentTypes = parsedData.paymentTypes;
-        state.currencies = parsedData.currencies;
         state.companies = parsedData.companies;
         state.counterparties = parsedData.counterparties;
       })
@@ -300,3 +266,160 @@ export const {
 } = reportSlice.actions;
 
 export default reportSlice.reducer;
+
+export const getSelectedOperation = (
+  operation_types: OperationType[],
+  operationId: string
+) => operation_types.find((op) => op.id === Number(operationId));
+
+export const selectFormData = (state: RootState): FormData =>
+  state.report.formData;
+export const selectOperationTypes = (state: RootState) =>
+  state.report.operation_types;
+export const selectWallets = (state: RootState) => state.report.wallets;
+export const selectUsers = (state: RootState) => state.report.users;
+export const selectCategoryArticles = (state: RootState) =>
+  state.report.categoryArticles;
+export const selectOperationCategories = (state: RootState) =>
+  state.report.operationCategories;
+export const selectReportCompanies = (state: RootState) =>
+  state.report.companies;
+export const selectCounterparties = (state: RootState) =>
+  state.report.counterparties;
+export const selectLoading = (state: RootState): boolean =>
+  state.report.loading;
+export const selectSuccess = (state: RootState): boolean =>
+  state.report.success;
+export const selectError = (state: RootState): string | null =>
+  state.report.error;
+
+export const selectSelectedOperation = (state: RootState) => {
+  const formData = selectFormData(state);
+  const operationTypes = selectOperationTypes(state);
+  return getSelectedOperation(operationTypes, formData.operation);
+};
+
+export const selectSelectedCompany = (state: RootState) => {
+  const formData = selectFormData(state);
+  const companies = selectReportCompanies(state);
+  return companies.find((c) => String(c.id) === formData.company);
+};
+
+export const selectSelectedWallet = (state: RootState) => {
+  const formData = selectFormData(state);
+  const wallets = selectWallets(state);
+  return wallets.find((w) => String(w.id) === formData.wallet);
+};
+
+export const selectSelectedCounterparty = (state: RootState) => {
+  const formData = selectFormData(state);
+  const counterparties = selectCounterparties(state);
+  return counterparties.find((cp) => String(cp.id) === formData.counterparty);
+};
+
+export const selectIsFormValid = (state: RootState): boolean => {
+  const formData = selectFormData(state);
+  const operationTypes = selectOperationTypes(state);
+  const selectedOperation = getSelectedOperation(
+    operationTypes,
+    formData.operation
+  );
+  if (!selectedOperation) return false;
+  switch (selectedOperation.name) {
+    case 'Перемещение':
+      return (
+        formData.operation.trim() !== '' &&
+        formData.user_id.trim() !== '' &&
+        formData.wallet_from.trim() !== '' &&
+        formData.wallet_to.trim() !== '' &&
+        formData.amount.trim() !== '' &&
+        Number(formData.amount) > 0
+      );
+    case 'Приход':
+    case 'Расход': {
+      const basicFieldsIncomeExpense = [
+        formData.company,
+        formData.operation,
+        formData.amount,
+        formData.user_id,
+        formData.wallet,
+        formData.invoice_id,
+        formData.deal_number,
+      ];
+      if (!basicFieldsIncomeExpense.every((f) => f && f.trim() !== ''))
+        return false;
+      return Boolean(formData.article) && formData.article.trim() !== '';
+    }
+    default: {
+      const basicFields = [
+        formData.company,
+        formData.operation,
+        formData.amount,
+      ];
+      return basicFields.every((f) => f && f.trim() !== '');
+    }
+  }
+};
+
+export const selectShowWalletField = (state: RootState): boolean => {
+  const selectedOperation = selectSelectedOperation(state);
+  return (
+    selectedOperation?.name === 'Приход' || selectedOperation?.name === 'Расход'
+  );
+};
+
+export const selectShowTransferForm = (state: RootState): boolean => {
+  const selectedOperation = selectSelectedOperation(state);
+  return selectedOperation?.name === 'Перемещение';
+};
+
+export const selectShowSuccessMessage = (state: RootState): boolean =>
+  selectSuccess(state);
+
+export const selectOperationOptions = (state: RootState) => {
+  const operationTypes = selectOperationTypes(state);
+  const excluded = ['Выставить счёт', 'Выставить расход'];
+  return operationTypes
+    .filter((op) => !excluded.includes(op.name))
+    .map((op, index) => ({
+      value: String(op.id),
+      label: op.name,
+      key: `${op.id}-${index}`,
+    }));
+};
+
+export const selectReportWalletOptions = (state: RootState) => {
+  const wallets = selectWallets(state);
+  return wallets.map((w, index) => ({
+    value: String(w.id),
+    label: w.username ? `${w.name} (${w.username})` : w.name,
+    key: `${w.id}-${index}`,
+  }));
+};
+
+export const selectUserOptions = (state: RootState) => {
+  const users = selectUsers(state);
+  return users.map((u, index) => ({
+    value: String(u.id),
+    label: u.username,
+    key: `user-${u.id}-${index}`,
+  }));
+};
+
+export const selectReportCompanyOptions = (state: RootState) => {
+  const companies = selectReportCompanies(state);
+  return companies.map((c, index) => ({
+    value: String(c.id),
+    label: c.name,
+    key: `${c.id}-${index}`,
+  }));
+};
+
+export const selectCounterpartyOptions = (state: RootState) => {
+  const counterparties = selectCounterparties(state);
+  return counterparties.map((cp, index) => ({
+    value: String(cp.id),
+    label: cp.full_name,
+    key: `${cp.id}-${index}`,
+  }));
+};
