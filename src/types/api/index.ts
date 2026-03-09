@@ -108,6 +108,11 @@ export interface IInitialDataResponse {
   users?: User[];
 }
 
+export interface IEstimateItemPayload {
+  vin_id: number;
+  amount: number;
+}
+
 export interface ISubmitPayload {
   operation_type_id: number;
   company_id: number;
@@ -124,6 +129,7 @@ export interface ISubmitPayload {
   wallet_to_id: number;
   product_id: number;
   money_holder_id: number;
+  estimates?: IEstimateItemPayload[];
 }
 
 export interface IClientInvoiceSubmitPayload {
