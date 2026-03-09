@@ -5,8 +5,12 @@ import { Button } from '@/ui/button';
 import { Input } from '@/ui/input';
 import SearchableSelectField from '@/ui/searchable-select-field';
 import { useAppDispatch, useAppSelector } from '@/hooks/hooks';
-import { fetchVins } from '@/services/vinService';
+import {
+  fetchVins,
+  fetchVinsByInvoiceId,
+} from '@/services/vinService';
 import { selectVinOptions } from '@/store/slices/vinsSlice';
+import type { VinNumber } from '@/types/api';
 
 export type EstimateDistributionRow = {
   amount: number;
@@ -18,10 +22,19 @@ type RowDraft = {
   vin_id: string;
 };
 
+const vinListToOptions = (vins: VinNumber[]) =>
+  vins.map((v, i) => ({
+    value: String(v.id),
+    label: `${v.vin} — ${v.car_model}`,
+    key: `vin-${v.id}-${i}`,
+  }));
+
 interface EstimateDistributionModalProps {
   isOpen: boolean;
   onClose: () => void;
   totalAmount: number;
+  /** ID счёта: при указании подгружаются только VIN, привязанные к этому счёту (client_invoice_id) */
+  invoiceId?: string;
   initialRows?: EstimateDistributionRow[];
   onSave: (rows: EstimateDistributionRow[]) => void;
 }
@@ -39,17 +52,28 @@ const EstimateDistributionModal: React.FC<EstimateDistributionModalProps> = ({
   isOpen,
   onClose,
   totalAmount,
+  invoiceId,
   initialRows,
   onSave,
 }) => {
   const dispatch = useAppDispatch();
-  const vinOptions = useAppSelector(selectVinOptions);
+  const globalVinOptions = useAppSelector(selectVinOptions);
 
   const [rows, setRows] = useState<RowDraft[]>([emptyRow()]);
+  const [invoiceVinOptions, setInvoiceVinOptions] = useState<
+    { value: string; label: string; key: string }[]
+  >([]);
+  const [vinOptionsLoading, setVinOptionsLoading] = useState(false);
+
+  const vinOptions = useMemo(() => {
+    if (invoiceId && invoiceId.trim() !== '') {
+      return invoiceVinOptions;
+    }
+    return globalVinOptions;
+  }, [invoiceId, invoiceVinOptions, globalVinOptions]);
 
   useEffect(() => {
     if (!isOpen) return;
-    dispatch(fetchVins());
     setRows(
       initialRows && initialRows.length > 0
         ? initialRows.map((r) => ({
@@ -58,7 +82,18 @@ const EstimateDistributionModal: React.FC<EstimateDistributionModalProps> = ({
           }))
         : [emptyRow()]
     );
-  }, [dispatch, isOpen, initialRows]);
+    const invoiceIdNum = invoiceId ? Number(invoiceId) : 0;
+    if (Number.isFinite(invoiceIdNum) && invoiceIdNum > 0) {
+      setVinOptionsLoading(true);
+      fetchVinsByInvoiceId(invoiceIdNum)
+        .then((vins) => setInvoiceVinOptions(vinListToOptions(vins)))
+        .catch(() => setInvoiceVinOptions([]))
+        .finally(() => setVinOptionsLoading(false));
+    } else {
+      dispatch(fetchVins());
+      setInvoiceVinOptions([]);
+    }
+  }, [dispatch, isOpen, initialRows, invoiceId]);
 
   const getVinOptionsForRow = (rowIdx: number) => {
     const currentId = Number(rows[rowIdx]?.vin_id);
@@ -192,7 +227,11 @@ const EstimateDistributionModal: React.FC<EstimateDistributionModalProps> = ({
                     name={`distribution-vin-${idx}`}
                     value={row.vin_id}
                     options={getVinOptionsForRow(idx)}
-                    placeholder="Вып список + поиск"
+                    placeholder={
+                      vinOptionsLoading
+                        ? 'Загрузка VIN по счёту...'
+                        : 'Вып список + поиск'
+                    }
                     onChange={(_name: string, value: string) =>
                       updateRow(idx, { vin_id: value })
                     }

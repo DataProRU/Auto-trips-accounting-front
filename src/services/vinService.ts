@@ -23,6 +23,15 @@ export const fetchVins = createAsyncThunk<
   }
 });
 
+export async function fetchVinsByInvoiceId(
+  clientInvoiceId: number
+): Promise<VinNumber[]> {
+  const response = await $api.get<VinNumber[]>('/api/vin_numbers', {
+    params: { client_invoice_id: clientInvoiceId },
+  });
+  return response.data;
+}
+
 export async function createVin(payload: VinNumber): Promise<VinNumber> {
   const response = await $api.post<VinNumber>('/api/vin_numbers', payload);
   return response.data;

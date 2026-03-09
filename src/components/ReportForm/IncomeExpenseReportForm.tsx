@@ -380,6 +380,7 @@ const IncomeExpenseReportForm: React.FC = () => {
         isOpen={isDistributionModalOpen}
         onClose={() => setIsDistributionModalOpen(false)}
         totalAmount={totalAmount}
+        invoiceId={formData.invoice_id}
         initialRows={distributionRows}
         onSave={setDistributionRows}
       />
