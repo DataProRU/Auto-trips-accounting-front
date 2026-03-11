@@ -130,7 +130,8 @@ export const createSubmitPayload = (
   formData: FormData,
   operation_types: OperationType[],
   companies: Company[],
-  state?: RootState
+  state?: RootState,
+  estimates?: { vin_id: number; amount: number }[]
 ): ISubmitPayload => {
   const operation = operation_types.find(
     (op) => op.id === Number(formData.operation)
@@ -172,6 +173,7 @@ export const createSubmitPayload = (
     wallet_to_id: formData.wallet_to ? Number(formData.wallet_to) : 0,
     product_id: formData.product_id ? Number(formData.product_id) : 0,
     money_holder_id: formData.user_id ? Number(formData.user_id) : 0,
+    ...(estimates && estimates.length > 0 ? { estimates } : {}),
   };
 };
 

@@ -13,6 +13,9 @@ import NoneTransferForm from '../NoneTransferForm/NoneTransferForm';
 import AddClientModal from '../Modals/AddClientModal';
 import { incomeExpenseSchema } from '@/lib/validationSchemas';
 import { Plus } from 'lucide-react';
+import EstimateDistributionModal, {
+  type EstimateDistributionRow,
+} from '@/components/Modals/EstimateDistributionModal/EstimateDistributionModal';
 
 import { submitForm } from '@/services/reportService';
 import { fetchClients } from '@/services/clientService';
@@ -21,7 +24,6 @@ import { fetchClientInvoice } from '@/services/clientInvoiceService';
 
 import {
   setFormDataField,
-  resetAccountType,
   createSubmitPayload,
   validateSubmitPayload,
   selectFormData,
@@ -41,6 +43,8 @@ import { selectProductOptions } from '@/store/selectors';
 import { useSelector } from 'react-redux';
 import { selectIsWalletModalOpen } from '@/store/selectors/walletSelectionSelectors';
 import type { Company } from '@/types/api';
+
+const toCents = (value: number): number => Math.round((value || 0) * 100);
 
 const IncomeExpenseReportForm: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -84,16 +88,14 @@ const IncomeExpenseReportForm: React.FC = () => {
   >({});
   const [wasSubmitted, setWasSubmitted] = useState(false);
   const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
+  const [isDistributionModalOpen, setIsDistributionModalOpen] = useState(false);
+  const [distributionRows, setDistributionRows] = useState<
+    EstimateDistributionRow[]
+  >([]);
 
   const reduxState = useAppSelector((state) => state as RootState);
   const isWalletModalOpen = useSelector(selectIsWalletModalOpen);
-  const isAnyModalOpen = isWalletModalOpen;
-
-  useEffect(() => {
-    if (formData.category && categoryArticles[formData.category]) {
-      dispatch(resetAccountType());
-    }
-  }, [formData.category, categoryArticles, dispatch]);
+  const isAnyModalOpen = isWalletModalOpen || isDistributionModalOpen;
 
   useEffect(() => {
     dispatch(setFormDataField({ name: 'category', value: '' }));
@@ -139,6 +141,27 @@ const IncomeExpenseReportForm: React.FC = () => {
     handleChange('deal_number', value);
   };
 
+  const totalAmount = useMemo(() => {
+    const n = parseFloat(formData.amount);
+    return Number.isFinite(n) ? n : 0;
+  }, [formData.amount]);
+
+  const amountFilled = totalAmount > 0;
+
+  const distributionAllocatedCents = useMemo(() => {
+    return distributionRows.reduce((sum, r) => sum + toCents(r.amount), 0);
+  }, [distributionRows]);
+
+  const isDistributionComplete = useMemo(() => {
+    if (!amountFilled) return true;
+    if (distributionRows.length === 0) return false;
+    const totalCents = toCents(totalAmount);
+    const allRowsValid = distributionRows.every(
+      (r) => r.amount > 0 && r.vin_id > 0
+    );
+    return allRowsValid && distributionAllocatedCents === totalCents;
+  }, [amountFilled, distributionRows, distributionAllocatedCents, totalAmount]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setWasSubmitted(true);
@@ -167,7 +190,8 @@ const IncomeExpenseReportForm: React.FC = () => {
         formData,
         operation_types,
         companies,
-        reduxState
+        reduxState,
+        distributionRows.length > 0 ? distributionRows : undefined
       );
 
       const validationError = validateSubmitPayload(payload);
@@ -313,13 +337,17 @@ const IncomeExpenseReportForm: React.FC = () => {
         type="number"
         name="amount"
         value={formData.amount}
-        onChange={(e) => handleChange('amount', e.target.value)}
+        onChange={(e) => {
+          handleChange('amount', e.target.value);
+          setDistributionRows([]);
+        }}
         placeholder="Сумма *"
         className="mb-3.5 w-full text-sm text-black placeholder:text-gray-400 border-gray-200"
         error={
           wasSubmitted && !isAnyModalOpen ? validationErrors.amount : undefined
         }
       />
+
       <Textarea
         name="comment"
         value={formData.comment}
@@ -328,12 +356,34 @@ const IncomeExpenseReportForm: React.FC = () => {
         className="my-1 min-h-[70px]"
       />
       <Button
+        type="button"
+        disabled={!amountFilled}
+        onClick={() => setIsDistributionModalOpen(true)}
+        className="mb-1 w-full bg-white border border-gray-300 hover:bg-gray-50 text-black font-light p-5 rounded-[8px] text-sm sm:text-base disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        Распределить по смете
+        {distributionRows.length > 0 ? ` (${distributionRows.length})` : ''}
+      </Button>
+      {amountFilled && (
+        <p className="text-xs text-gray-500 mb-3.5">
+          Распределено: {distributionAllocatedCents / 100} из {totalAmount}
+        </p>
+      )}
+      <Button
         type="submit"
-        disabled={loading || !isFormValid}
+        disabled={loading || !isFormValid || !isDistributionComplete}
         className="mb-3.5 w-full bg-[#25fcf1] hover:bg-[#25fcf1aa] text-black font-light p-5 rounded-[8px] text-sm sm:text-base"
       >
         Отправить
       </Button>
+      <EstimateDistributionModal
+        isOpen={isDistributionModalOpen}
+        onClose={() => setIsDistributionModalOpen(false)}
+        totalAmount={totalAmount}
+        invoiceId={formData.invoice_id}
+        initialRows={distributionRows}
+        onSave={setDistributionRows}
+      />
       <AddClientModal
         isOpen={isAddClientModalOpen}
         onClose={() => setIsAddClientModalOpen(false)}
