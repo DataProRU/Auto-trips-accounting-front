@@ -205,7 +205,7 @@ const EstimateDistributionModal: React.FC<EstimateDistributionModalProps> = ({
                 </button>
               )}
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex flex-col">
                   <label className="text-xs text-gray-500 min-h-[1.25rem] flex items-end pb-1">
                     Сумма *
