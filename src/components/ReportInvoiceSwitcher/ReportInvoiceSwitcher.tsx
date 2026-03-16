@@ -28,7 +28,7 @@ const ReportInvoiceSwitcher: React.FC<ReportInvoiceSwitcherProps> = ({
           activeTab === 'report' ? activeStyles : inactiveStyles
         )}
       >
-        Отчёт
+        Операции
       </Link>
       <Link
         to="/tg_bot_add/invoice"
