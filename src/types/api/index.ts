@@ -122,7 +122,6 @@ export interface ISubmitPayload {
   date: string;
   amount: number;
   article_id: number;
-  finish_date: string;
   comment: string;
   wallet_id: number;
   wallet_from_id: number;
@@ -130,6 +129,8 @@ export interface ISubmitPayload {
   product_id: number;
   money_holder_id: number;
   estimates?: IEstimateItemPayload[];
+  currency_id?: number;
+  currency_to_id?: number;
 }
 
 export interface IClientInvoiceSubmitPayload {

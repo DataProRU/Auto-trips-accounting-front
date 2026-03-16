@@ -3,6 +3,7 @@ import type {
   Wallet,
   Company,
   Counterparty,
+  Currency,
   InvoiceResponse,
   Client,
   Product,
@@ -15,6 +16,7 @@ export interface ReportState {
   formData: FormData;
   operation_types: OperationType[];
   wallets: Wallet[];
+  currencies: Currency[];
   users: { id: number; username: string }[];
   categoryArticles: Record<string, string[]>;
   operationCategories: Record<string, string[]>;

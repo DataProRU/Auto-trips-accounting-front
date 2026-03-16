@@ -13,19 +13,22 @@ const incomeExpenseBaseFields = {
   company: z.string().min(1, 'Компания обязательна'),
   operation: z.string().min(1, 'Вид операции обязателен'),
   user_id: z.string().min(1, 'Держатель денег обязателен'),
+  currency_from: z.string().min(1, 'Валюта обязательна'),
   amount: positiveAmount,
   invoice_id: z.string().min(1, 'Выберите номер счёта'),
   deal_number: z.string().min(1, 'Номер сделки обязателен'),
   comment: z.string().optional(),
 };
 
-// Схема для операции "Перемещение" (без компании, валюты и способов оплаты)
+// Схема для операции "Перемещение" (валюта из списка currencies, на сервер — currency_id и currency_to_id)
 export const transferSchema = z.object({
   company: z.string().optional(),
   operation: z.string().min(1, 'Вид операции обязателен'),
   user_id: z.string().min(1, 'Держатель денег обязателен'),
   wallet_from: z.string().min(1, 'Кошелёк отправителя обязателен'),
   wallet_to: z.string().min(1, 'Кошелёк получателя обязателен'),
+  currency_from: z.string().min(1, 'Валюта (откуда) обязательна'),
+  currency_to: z.string().min(1, 'Валюта (куда) обязательна'),
   amount: positiveAmount,
   date: z.string().optional(),
   comment: z.string().optional(),

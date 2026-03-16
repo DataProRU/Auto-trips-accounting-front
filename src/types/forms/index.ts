@@ -10,6 +10,8 @@ export interface FormData {
   operation: string;
   wallet_from: string;
   wallet_to: string;
+  currency_from: string;
+  currency_to: string;
   user_id: string;
   category: string;
   article: string;

@@ -31,6 +31,8 @@ const initialFormData: FormData = {
   comment: '',
   wallet_from: '',
   wallet_to: '',
+  currency_from: '',
+  currency_to: '',
   user_id: '',
   wallet: '',
   company: '',
@@ -42,6 +44,7 @@ const initialState: ReportState = {
   formData: initialFormData,
   operation_types: [],
   wallets: [],
+  currencies: [],
   users: [],
   categoryArticles: {},
   operationCategories: {},
@@ -105,12 +108,14 @@ const parseInitialData = (data: IInitialDataResponse) => {
   });
 
   const users: { id: number; username: string }[] = data.users ?? [];
+  const currencies = data.currencies ?? [];
 
   return {
     operation_types: data.operation_types,
     companies,
     counterparties,
     users,
+    currencies,
     wallets: data.wallets.map((w) => ({
       id: w.id,
       name: w.name,
@@ -139,8 +144,10 @@ export const createSubmitPayload = (
   const isTransfer = operation?.name === 'Перемещение';
 
   let articleId = 0;
-  if (!isTransfer && formData.category && formData.article) {
-    const company = companies.find((c) => String(c.id) === formData.company);
+  if (!isTransfer && formData.company && formData.category && formData.article) {
+    const company = companies.find(
+      (c) => String(c.id) === formData.company
+    );
     if (company) {
       const category = company.categories.find(
         (cat) => cat.name === formData.category
@@ -157,16 +164,15 @@ export const createSubmitPayload = (
   const username =
     state?.auth.user?.username || localStorage.getItem('username') || '';
 
-  return {
+  const payload: ISubmitPayload = {
     operation_type_id: formData.operation ? Number(formData.operation) : 0,
     company_id: formData.company ? Number(formData.company) : 0,
     client_id: formData.client_id ? Number(formData.client_id) : 0,
     client_invoice_id: formData.invoice_id ? Number(formData.invoice_id) : 0,
     username,
-    date: isTransfer ? formData.date || '' : '',
+    date: isTransfer ? formData.date || '' : (formData.date_finish || formData.date || ''),
     amount: parseFloat(formData.amount) || 0,
     article_id: articleId,
-    finish_date: isTransfer ? '' : formData.date_finish || '',
     comment: formData.comment || '',
     wallet_id: formData.wallet ? Number(formData.wallet) : 0,
     wallet_from_id: formData.wallet_from ? Number(formData.wallet_from) : 0,
@@ -175,6 +181,20 @@ export const createSubmitPayload = (
     money_holder_id: formData.user_id ? Number(formData.user_id) : 0,
     ...(estimates && estimates.length > 0 ? { estimates } : {}),
   };
+  if (isTransfer) {
+    payload.currency_id = formData.currency_from
+      ? Number(formData.currency_from)
+      : 0;
+    payload.currency_to_id = formData.currency_to
+      ? Number(formData.currency_to)
+      : 0;
+  } else {
+    payload.currency_id = formData.currency_from
+      ? Number(formData.currency_from)
+      : 0;
+    payload.currency_to_id = 0;
+  }
+  return payload;
 };
 
 // Функция для валидации payload
@@ -201,6 +221,8 @@ const reportSlice = createSlice({
       state.formData.article = '';
       state.formData.wallet_from = '';
       state.formData.wallet_to = '';
+      state.formData.currency_from = '';
+      state.formData.currency_to = '';
     },
     resetAccountType: (state) => {
       state.formData.article = '';
@@ -229,6 +251,7 @@ const reportSlice = createSlice({
         const parsedData = parseInitialData(action.payload);
         state.operation_types = parsedData.operation_types;
         state.wallets = parsedData.wallets;
+        state.currencies = parsedData.currencies;
         state.users = parsedData.users;
         state.categoryArticles = parsedData.categoryArticles;
         state.operationCategories = parsedData.operationCategories;
@@ -286,6 +309,8 @@ export const selectOperationCategories = (state: RootState) =>
   state.report.operationCategories;
 export const selectReportCompanies = (state: RootState) =>
   state.report.companies;
+export const selectCurrencies = (state: RootState) =>
+  state.report.currencies ?? [];
 export const selectCounterparties = (state: RootState) =>
   state.report.counterparties;
 export const selectLoading = (state: RootState): boolean =>
@@ -334,6 +359,8 @@ export const selectIsFormValid = (state: RootState): boolean => {
         formData.user_id.trim() !== '' &&
         formData.wallet_from.trim() !== '' &&
         formData.wallet_to.trim() !== '' &&
+        formData.currency_from.trim() !== '' &&
+        formData.currency_to.trim() !== '' &&
         formData.amount.trim() !== '' &&
         Number(formData.amount) > 0
       );
@@ -345,6 +372,7 @@ export const selectIsFormValid = (state: RootState): boolean => {
         formData.amount,
         formData.user_id,
         formData.wallet,
+        formData.currency_from,
         formData.invoice_id,
         formData.deal_number,
       ];
@@ -353,11 +381,7 @@ export const selectIsFormValid = (state: RootState): boolean => {
       return Boolean(formData.article) && formData.article.trim() !== '';
     }
     default: {
-      const basicFields = [
-        formData.company,
-        formData.operation,
-        formData.amount,
-      ];
+      const basicFields = [formData.operation, formData.amount];
       return basicFields.every((f) => f && f.trim() !== '');
     }
   }

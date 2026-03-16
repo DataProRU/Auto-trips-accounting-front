@@ -20,7 +20,7 @@ import {
   validateSubmitPayload,
   selectFormData,
   selectOperationTypes,
-  selectWallets,
+  selectCurrencies,
   selectReportCompanies,
   selectLoading,
   selectUserOptions,
@@ -33,10 +33,16 @@ const TransferReportForm: React.FC = () => {
 
   const formData = useAppSelector(selectFormData);
   const operation_types = useAppSelector(selectOperationTypes);
-  const wallets = useAppSelector(selectWallets);
+  const currencies = useAppSelector(selectCurrencies);
   const companies = useAppSelector(selectReportCompanies);
   const loading = useAppSelector(selectLoading);
   const userOptions = useAppSelector(selectUserOptions);
+
+  const currencyOptions = currencies.map((c) => ({
+    value: String(c.id),
+    label: `${c.code} (${c.symbol})`,
+    key: `currency-${c.id}`,
+  }));
 
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
@@ -52,6 +58,8 @@ const TransferReportForm: React.FC = () => {
     formData.user_id.trim() !== '' &&
     formData.wallet_from.trim() !== '' &&
     formData.wallet_to.trim() !== '' &&
+    formData.currency_from.trim() !== '' &&
+    formData.currency_to.trim() !== '' &&
     formData.amount.trim() !== '' &&
     Number(formData.amount) > 0;
 
@@ -59,11 +67,6 @@ const TransferReportForm: React.FC = () => {
     dispatch(setFormDataField({ name, value }));
     setValidationErrors((prev) => ({ ...prev, [name]: '' }));
   };
-
-  const walletFrom = wallets.find((w) => String(w.id) === formData.wallet_from);
-  const walletTo = wallets.find((w) => String(w.id) === formData.wallet_to);
-  const currencyFromLabel = walletFrom?.currency_code ?? '';
-  const currencyToLabel = walletTo?.currency_code ?? '';
 
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
@@ -134,19 +137,33 @@ const TransferReportForm: React.FC = () => {
         errors={wasSubmitted && !isAnyModalOpen ? validationErrors : {}}
       />
       <div className="flex sm:flex-row gap-3 sm:gap-5 mb-3.5">
-        <Input
-          type="text"
-          readOnly
-          value={currencyFromLabel}
-          placeholder="Валюта (откуда)"
-          className="w-full text-sm text-black placeholder:text-gray-400 bg-gray-50 border-gray-200"
+        <SelectField
+          name="currency_from"
+          value={formData.currency_from}
+          options={currencyOptions}
+          placeholder="Валюта (откуда) *"
+          onChange={handleChange}
+          required
+          error={
+            wasSubmitted && !isAnyModalOpen
+              ? validationErrors.currency_from
+              : undefined
+          }
+          className="flex-1 w-full text-sm text-black placeholder:text-gray-400"
         />
-        <Input
-          type="text"
-          readOnly
-          value={currencyToLabel}
-          placeholder="Валюта (куда)"
-          className="w-full text-sm text-black placeholder:text-gray-400 bg-gray-50 border-gray-200"
+        <SelectField
+          name="currency_to"
+          value={formData.currency_to}
+          options={currencyOptions}
+          placeholder="Валюта (куда) *"
+          onChange={handleChange}
+          required
+          error={
+            wasSubmitted && !isAnyModalOpen
+              ? validationErrors.currency_to
+              : undefined
+          }
+          className="flex-1 w-full text-sm text-black placeholder:text-gray-400"
         />
       </div>
       <div className="flex sm:flex-row gap-3 sm:gap-5 mb-3.5">

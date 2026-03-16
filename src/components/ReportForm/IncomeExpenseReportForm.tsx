@@ -29,12 +29,13 @@ import {
   selectFormData,
   selectOperationTypes,
   selectWallets,
+  selectCurrencies,
   selectCategoryArticles,
   selectOperationCategories,
   selectReportCompanies,
+  selectReportCompanyOptions,
   selectLoading,
   selectIsFormValid,
-  selectReportCompanyOptions,
   selectUserOptions,
 } from '@/store/slices/reportSlice';
 import { addClient, selectClientOptions } from '@/store/slices/clientsSlice';
@@ -55,6 +56,7 @@ const IncomeExpenseReportForm: React.FC = () => {
   const categoryArticles = useAppSelector(selectCategoryArticles);
   const operationCategories = useAppSelector(selectOperationCategories);
   const companies = useAppSelector(selectReportCompanies);
+  const companyOptions = useAppSelector(selectReportCompanyOptions);
   const loading = useAppSelector(selectLoading);
   const isFormValid = useAppSelector(selectIsFormValid);
 
@@ -66,12 +68,21 @@ const IncomeExpenseReportForm: React.FC = () => {
     return list.map((w, index) => ({
       value: String(w.id),
       label: w.username
-        ? `${w.name} (${w.username}) ${w.currency_symbol}`
+        ? `${w.name} (${w.username})`
         : w.name,
       key: `${w.id}-${index}`,
     }));
   }, [wallets, formData.user_id]);
-  const companyOptions = useAppSelector(selectReportCompanyOptions);
+  const currencies = useAppSelector(selectCurrencies);
+  const currencyOptions = useMemo(
+    () =>
+      currencies.map((c) => ({
+        value: String(c.id),
+        label: `${c.code} (${c.symbol})`,
+        key: `currency-${c.id}`,
+      })),
+    [currencies]
+  );
   const userOptions = useAppSelector(selectUserOptions);
   const clientOptions = useAppSelector(selectClientOptions);
   const productOptions = useAppSelector(selectProductOptions);
@@ -332,6 +343,20 @@ const IncomeExpenseReportForm: React.FC = () => {
           wasSubmitted && !isAnyModalOpen ? validationErrors.wallet : undefined
         }
         className="mb-3.5 w-full text-sm text-black"
+      />
+      <SelectField
+        name="currency_from"
+        value={formData.currency_from}
+        options={currencyOptions}
+        placeholder="Валюта *"
+        onChange={handleChange}
+        required
+        error={
+          wasSubmitted && !isAnyModalOpen
+            ? validationErrors.currency_from
+            : undefined
+        }
+        className="mb-3.5 w-full text-sm text-black placeholder:text-gray-400"
       />
       <Input
         type="number"

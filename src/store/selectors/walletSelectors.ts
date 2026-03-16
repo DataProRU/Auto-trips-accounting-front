@@ -9,13 +9,12 @@ export const createWalletOptions = (
     id: number;
     name: string;
     username: string;
-    currency_symbol?: string;
-  }[]
+  }[] 
 ) => {
   return wallets.map((wallet, index) => ({
     value: String(wallet.id),
     label: wallet.username
-      ? `${wallet.name} (${wallet.username}) ${wallet.currency_symbol}`
+      ? `${wallet.name} (${wallet.username})`
       : wallet.name,
     key: `${wallet.id}-${index}`,
   }));
