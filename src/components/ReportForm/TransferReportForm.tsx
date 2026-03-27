@@ -11,6 +11,7 @@ import ErrorMessage from '@/ui/error-message';
 import SelectField from '@/ui/select-field';
 import TransferForm from '../TransferForm/TransferForm';
 import { transferSchema } from '@/lib/validationSchemas';
+import { parseDateInputValue, toLocalDateInputValue } from '@/lib/date';
 
 import { submitForm } from '@/services/reportService';
 
@@ -70,7 +71,7 @@ const TransferReportForm: React.FC = () => {
 
   const handleDateChange = (date: Date | undefined) => {
     if (date) {
-      handleChange('date', date.toISOString().split('T')[0]);
+      handleChange('date', toLocalDateInputValue(date));
     }
   };
 
@@ -118,7 +119,7 @@ const TransferReportForm: React.FC = () => {
       <div className="relative mb-3.5">
         <DatePicker
           label="Дата назначения"
-          value={formData.date ? new Date(formData.date) : undefined}
+          value={parseDateInputValue(formData.date)}
           onChange={handleDateChange}
           className={
             wasSubmitted && !isAnyModalOpen && validationErrors.date

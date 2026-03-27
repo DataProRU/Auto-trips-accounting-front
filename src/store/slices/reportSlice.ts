@@ -15,10 +15,11 @@ import type {
 } from '@/types/actions';
 
 import { fetchInitialData, submitForm } from '../../services/reportService';
+import { todayLocalDateInputValue } from '@/lib/date';
 
 const initialFormData: FormData = {
   username: '',
-  date: new Date().toISOString().split('T')[0],
+  date: todayLocalDateInputValue(),
   operation: '',
   client_id: '',
   product_id: '',
@@ -26,7 +27,7 @@ const initialFormData: FormData = {
   deal_number: '',
   category: '',
   article: '',
-  date_finish: new Date().toISOString().split('T')[0],
+  date_finish: todayLocalDateInputValue(),
   amount: '',
   comment: '',
   wallet_from: '',

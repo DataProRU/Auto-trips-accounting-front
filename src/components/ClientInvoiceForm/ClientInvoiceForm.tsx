@@ -30,6 +30,7 @@ import { selectCompanyOptions } from '@/store/slices/companiesSlice';
 import { selectClientOptions } from '@/store/slices/clientsSlice';
 import { selectNextInvoiceNumber } from '@/store/slices/clientInvoicesSlice';
 import Loader from '@/ui/loader';
+import { parseDateInputValue, toLocalDateInputValue } from '@/lib/date';
 
 const ClientInvoiceForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -200,9 +201,9 @@ const ClientInvoiceForm: React.FC = () => {
             <div className="flex-1 min-w-[140px]">
               <DatePicker
                 label="Дата счета"
-                value={field.value ? new Date(field.value) : undefined}
+                value={parseDateInputValue(field.value)}
                 onChange={(date) =>
-                  field.onChange(date ? date.toISOString().split('T')[0] : '')
+                  field.onChange(date ? toLocalDateInputValue(date) : '')
                 }
                 className={errors.date ? 'border-red-500' : 'text-black'}
               />

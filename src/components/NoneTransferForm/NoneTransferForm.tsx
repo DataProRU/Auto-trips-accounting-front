@@ -1,9 +1,11 @@
 import React from 'react';
 import { DatePicker } from '@/ui/date-picker';
 import SelectField from '@/ui/select-field';
+import SearchableSelectField from '@/ui/searchable-select-field';
 import ErrorMessage from '@/ui/error-message';
 import type { Company } from '@/types/api';
 import type { FormData } from '@/types/forms';
+import { parseDateInputValue, toLocalDateInputValue } from '@/lib/date';
 
 interface NoneTransferFormProps {
   formData: {
@@ -70,14 +72,14 @@ const NoneTransferForm: React.FC<NoneTransferFormProps> = ({
   const handleDateChange = (selectedDate: Date | undefined) => {
     handleChange(
       'date_finish',
-      selectedDate ? selectedDate.toISOString().split('T')[0] : ''
+      selectedDate ? toLocalDateInputValue(selectedDate) : ''
     );
   };
 
   return (
     <>
       <div className="flex flex-row gap-3 mb-3.5">
-        <SelectField
+        <SearchableSelectField
           name="article"
           value={currentArticleValue}
           options={articleOptionsWithCategory}
@@ -112,9 +114,7 @@ const NoneTransferForm: React.FC<NoneTransferFormProps> = ({
       <div className="date-wrapper mb-3.5">
         <DatePicker
           label="Дата назначения"
-          value={
-            formData.date_finish ? new Date(formData.date_finish) : undefined
-          }
+          value={parseDateInputValue(formData.date_finish)}
           onChange={handleDateChange}
           className={errors.date_finish ? 'border-red-500' : ''}
         />
